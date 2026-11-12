@@ -96,6 +96,7 @@ values > 0, and a 3-number `pos`; otherwise it is skipped with a console error.
 | `door` | no | Side door on a vertical panel thin in **x** (not with `lid`, `mesh` or `notch`). Value `"front-right"`, `"front-left"`, `"back-right"` or `"back-left"`: hinge edge (`front` = max z, `back` = min z) and the side it swings to (`right` = +x). Two hinges are drawn; swings 85° with **Klapy i drzwiczki otwarte** |
 | `note` | no | Short Polish remark. Shown as a ⚠ tooltip in the parts list and in the `.md` export |
 | `notch` | no | `[z depth, y height]` rectangular cut-out at the top rear corner. Only for vertical side panels (thin in x) |
+| `step` | no | Integer > 0: number of the step in `## Kolejność składania` in which this panel is mounted. Drives the **Składanie** slider. A panel without `step` appears only at the end. Every panel in the current versions has one |
 
 Renderer limits to respect:
 
@@ -115,7 +116,9 @@ dimensions in **millimetres**, using these three sections:
 - `## Kolejność składania` – numbered assembly steps that match the panels in this file
 - `## Do sprawdzenia przed zamówieniem` – measurements and assumptions the owner must verify
 
-Rewrite the notes whenever the panels change; stale assembly steps are worse than none.
+Rewrite the notes whenever the panels change; stale assembly steps are worse than none. Keep each
+step as `N. **Tytuł.** …` – the slider reads the titles from that pattern – and keep the panels'
+`step` numbers in sync when steps are added, removed or renumbered.
 
 ## Adding a new design
 
@@ -201,6 +204,10 @@ Only when the owner asks for a viewer feature. Things to know:
   (`PRICE_DEF`) are rough guesses; the owner can edit them in the page, and they are remembered
   in `localStorage` under `parapet.ceny`. The `.md` export includes the same table (`costMd`),
   with the prices currently entered, between the sheet-metal table and `notes`.
+- **Składanie** slider (`buildSteps`, `applyStep`): position 0 = empty room, then one position
+  per distinct panel `step`, last = everything. Panels of later steps are hidden (with their
+  hinges – `panelRoots[i]` holds all scene objects of panel i), panels of the current step get
+  orange edges, and their dimensions follow. `select(v)` resets it to the full unit.
 
 ## Verifying with Playwright
 
@@ -213,4 +220,5 @@ console messages (level error) – expect none
 
 Useful selectors: view buttons `button[data-v="persp|front|top|side"]`, visibility
 `.seg[data-g="room|panels"] button[data-m="on|ghost|off"]`, `#dimsToggle`, `#furnToggle`,
-`#lidToggle`, parts list `#cut summary`, row `#cut tr[data-i="N"]`, export `#exportMd`.
+`#lidToggle`, assembly slider `#stepRange` (+ `#stepPrev`, `#stepNext`, label `#stepLabel`),
+parts list `#cut summary`, row `#cut tr[data-i="N"]`, export `#exportMd`.

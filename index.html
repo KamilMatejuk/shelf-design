@@ -468,6 +468,7 @@ scene.add(sun);
 const M = {
   wall:  new THREE.MeshStandardMaterial({ color: 0xf3ecdc, roughness: 0.95 }),
   floor: new THREE.MeshStandardMaterial({ color: 0xdfc8a4, roughness: 0.9 }),
+  ceil:  new THREE.MeshStandardMaterial({ color: 0xf8f6f1, roughness: 0.95 }),
   white: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }),
   rad:   new THREE.MeshStandardMaterial({ color: 0xf4f2ec, roughness: 0.45 }),
   pipe:  new THREE.MeshStandardMaterial({ color: 0xf2f0ea, roughness: 0.4 }),
@@ -505,6 +506,13 @@ function elbow(p, r, mat = M.pipe) {                        // kulka na kolanku
   floor.position.set(R.roomW / 2, 0, R.roomD / 2);
   floor.receiveShadow = true;
   room.add(floor);
+
+  // sufit — widoczny tylko od dołu (z góry przezroczysty) i nie rzuca cienia, bo słońce jest nad nim
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(R.roomW, R.roomD), M.ceil);
+  ceil.rotation.x = Math.PI / 2;
+  ceil.position.set(R.roomW / 2, R.roomH, R.roomD / 2);
+  ceil.receiveShadow = true;
+  room.add(ceil);
 
   // ściany boczne — widoczne tylko od środka, żeby nie zasłaniały widoku z zewnątrz
   const sideGeo = new THREE.PlaneGeometry(R.roomD, R.roomH);

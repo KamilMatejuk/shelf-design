@@ -118,7 +118,9 @@ dimensions in **millimetres**, using these three sections:
 
 Rewrite the notes whenever the panels change; stale assembly steps are worse than none. Keep each
 step as `N. **Tytuł.** …` – the slider reads the titles from that pattern – and keep the panels'
-`step` numbers in sync when steps are added, removed or renumbered.
+`step` numbers in sync when steps are added, removed or renumbered. Keep the `panels` array sorted
+by `step` (within a step, in the order the step's text mounts them): the parts list and the `.md`
+export follow the array order.
 
 ## Adding a new design
 

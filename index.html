@@ -24,11 +24,11 @@
   #views input[type=checkbox] { width: 16px; height: 16px; margin: 0; accent-color: #2f5fb3; }
   #views input[type=text] { width: 100%; box-sizing: border-box; margin-top: 6px; padding: 5px 8px; font: inherit;
     border: 1px solid #cfd6de; border-radius: 6px; }
-  #verName { font-weight: 600; }
+  #views .vers { display: flex; flex-wrap: wrap; gap: 4px; }
+  #views .vers button { padding: 4px 9px; font-size: 12px; }
+  #views .vers button.act { background: #2f5fb3; color: #fff; }
   #views input[type=text]:disabled { background: #f3f5f8; }
   #views button:disabled { opacity: .45; cursor: default; background: #eef1f5; }
-  #verMsg { margin-top: 6px; }
-  #verMsg.err { color: #b3261e; }
   #views .unit { color: #7a8594; font-size: 12px; }
   #views .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; }
   #views .hint { color: #7a8594; font-size: 12px; }
@@ -95,22 +95,71 @@
     <label class="row"><span>Klapy i drzwiczki otwarte</span><input type="checkbox" id="lidToggle"></label>
   </section>
   <section>
-    <h2>Wersja mebla</h2>
-    <div class="row"><span id="verName"></span></div>
-    <input type="text" id="verInput" placeholder="nazwa wersji do zapisu">
-    <div class="grid" style="margin-top:6px">
-      <button id="verSave">Zapisz do pliku</button>
-      <button id="verLoad">Wczytaj z pliku</button>
-    </div>
-    <button id="verReset" style="width:100%;margin-top:6px">Wyczyść wczytany plik</button>
-    <input type="file" id="verFile" accept=".json,application/json" hidden>
-    <div id="verMsg" class="hint"></div>
+    <h2>Wersja</h2>
+    <div id="verList" class="vers"></div>
   </section>
   <section>
     <details id="info"></details>
   </section>
   <section class="hint">Mysz: obrót (lewy przycisk), przesuwanie (prawy), zoom (kółko)</section>
 </div>
+<script type="application/json" id="wersje">
+[
+  {
+    "name": "v1",
+    "saved": "2026-11-12T11:04:29.200Z",
+    "notes": "## Okucia i dodatki\n\n- Zawiasy do dwóch klap (fortepianowy na całą długość albo 3–4 zawiasy splatane na klapę)\n- Kołki rozporowe z wkrętami do przykręcenia boków do ścian\n- Konfirmaty lub wkręty do płyt, kołki drewniane i klej do ramki maskownicy\n- Klej montażowy do przyklejenia blatu do parapetu\n- Obrzeże na widoczne krawędzie płyt (szczególnie nad kaloryferem)\n- Pasek filcu lub uszczelki pod klapę z blachy\n- Taśma LED pod płytę pod parapetem (opcjonalnie)\n\n## Kolejność składania\n\n1. **Piony.** Bok lewy i bok prawy przykręcić do ścian bocznych, tylną krawędzią do ściany pod oknem. Przegrodę środkową ustawić tak, żeby jej lewa powierzchnia była 800 od lewej ściany. Wszystkie trzy mają wysokość 987 i kończą się pod parapetem.\n2. **Płyta pod parapetem.** Położyć na trzech pionach, dosunąć do ściany pod oknem; leży bezpośrednio pod spodem parapetu (1005). Skręcić z pionami od góry.\n3. **Listwa przednia.** Przykręcić do czoła płyty pod parapetem na całej szerokości. Górna krawędź równo z górą parapetu (1045), dolna wystaje 10 poniżej płyty i zasłania taśmę LED.\n4. **Blat.** Położyć na parapecie i na listwie przedniej, tylną krawędzią do okna, przodem równo z listwą. Przykleić do parapetu klejem montażowym i skręcić z listwą przednią.\n5. **Prawa wnęka – wnętrze.** Półkę prawą zamocować między przegrodą a bokiem prawym, górną powierzchnią na 300. Tył prawy górny postawić przy ścianie, od spodu klapy do płyty pod parapetem.\n6. **Front prawy.** Przykręcić do czół przegrody i boku prawego oraz do czoła półki. Sięga od podłogi do 720; lewa krawędź równo z lewą powierzchnią przegrody środkowej (800 od lewej ściany), więc front zakrywa czoło przegrody. Od środka, równo ze spodem klapy, przykręcić do frontu listwę pod klapę.\n7. **Klapa prawa.** Zawiasami do tyłu prawego górnego, górna powierzchnia na 720. Przodem leży na listwie pod klapę. Luz 2 po bokach i z przodu.\n8. **Lewa wnęka – tył.** Tył lewy górny postawić przy ścianie nad kaloryferem, tak samo jak po prawej.\n9. **Ramka maskownicy.** Pion lewy (40) przykręcić do czoła boku lewego. Listwę górną i dolną (760 × 60) połączyć na kołki i klej z pionem lewym; prawymi końcami dochodzą do lewej krawędzi frontu prawego (800 od lewej ściany, równo z lewą powierzchnią przegrody środkowej) – połączyć z nią na kołki i klej. Ramka licuje z frontem prawym.\n10. **Blacha maskownicy.** Wyciąć dwa wycięcia na rurki od lewej krawędzi (wysokość 140 i 645 – zmierzyć na miejscu). Przykręcić od tyłu ramki z zakładem 20 u góry, u dołu i z lewej; prawą krawędzią dochodzi do przegrody środkowej (800 od lewej ściany), do górnej listwy co ok. 150, żeby listwa nie uginała się pod klapą.\n11. **Klapa lewa z blachy.** Zawias przynitować lub przykręcić śrubkami do blachy i do tyłu lewego górnego. Przodem klapa leży na górnej listwie ramki; pod spód nakleić filc.\n\n## Do sprawdzenia przed zamówieniem\n\n- Szerokość 2100 to wymiar pokoju bez luzu – zmierzyć na wysokości parapetu i przy podłodze, odjąć 2–3 na nierówności ścian.\n- Grubość parapetu (40) zmierzyć w kilku miejscach; od niej zależy wysokość listwy przedniej.\n- Sprawdzić, czy skrzydło okna otwiera się nad blatem (blat ma 18, szczelina pod oknem 17).\n- Zmierzyć, ile od ściany odstaje gałka zaworu – za maskownicą jest 22 luzu przed kaloryferem.\n- Zmierzyć dokładnie, gdzie rurki przecinają płaszczyznę frontu; pion lewy ramki (40) ma ok. 8 luzu do górnej rurki.\n- Jeśli będą listwy przypodłogowe, uwzględnić je w bokach, froncie i ramce.\n- Wysokość osłony LED (10) pasuje tylko do płaskiej taśmy bez profilu.\n",
+    "panels": [
+      {"name": "Blat na parapecie", "size": [210, 1.8, 25], "pos": [0, 104.5, -2]},
+      {"name": "Płyta pod parapetem", "size": [210, 1.8, 21.2], "pos": [0, 98.7, 0]},
+      {"name": "Listwa przednia", "size": [210, 6.8, 1.8], "pos": [0, 97.7, 21.2]},
+      {"name": "Bok lewy", "size": [1.8, 98.7, 21.2], "pos": [0, 0, 0]},
+      {"name": "Przegroda środkowa", "size": [1.8, 98.7, 21.2], "pos": [80, 0, 0]},
+      {"name": "Bok prawy", "size": [1.8, 98.7, 21.2], "pos": [208.2, 0, 0]},
+      {"name": "Tył prawy górny", "size": [126.4, 28.5, 1.8], "pos": [81.8, 70.2, 0]},
+      {"name": "Klapa (półka prawa 72)", "size": [126, 1.8, 19.2], "pos": [82, 70.2, 1.8], "lid": true, "note": "klapa na zawiasach, luz 2 mm"},
+      {"name": "Półka prawa 30", "size": [126.4, 1.8, 21.2], "pos": [81.8, 28.2, 0]},
+      {"name": "Listwa pod klapę", "size": [126.4, 6, 1.8], "pos": [81.8, 64.2, 19.4], "note": "przykręcona do frontu od środka"},
+      {"name": "Ramka maskownicy – pion lewy", "size": [4, 72, 1.8], "pos": [0, 0, 21.2]},
+      {"name": "Ramka maskownicy – dół", "size": [76, 6, 1.8], "pos": [4, 0, 21.2], "note": "prawym końcem na kołki i klej do lewej krawędzi frontu prawego (800 od lewej ściany)"},
+      {"name": "Ramka maskownicy – góra", "size": [76, 6, 1.8], "pos": [4, 66, 21.2], "note": "prawym końcem na kołki i klej do lewej krawędzi frontu prawego (800 od lewej ściany)"},
+      {"name": "Maskownica (blacha perf.)", "size": [78, 64, 0.1], "pos": [2, 4, 21.1], "mesh": true, "note": "blacha perforowana 1 mm, od tyłu ramki (zakład 20 mm u góry, u dołu i z lewej; z prawej do przegrody); 2 wycięcia na rurki"},
+      {"name": "Tył lewy górny", "size": [78.2, 28.5, 1.8], "pos": [1.8, 70.2, 0]},
+      {"name": "Klapa lewa (blacha perf.)", "size": [77.8, 0.1, 21.2], "pos": [2, 72, 1.8], "mesh": true, "lid": true, "note": "blacha perforowana 1 mm, na zawiasach, przodem leży na ramce"},
+      {"name": "Front prawy", "size": [130, 72, 1.8], "pos": [80, 0, 21.2], "note": "lewa krawędź równo z lewą powierzchnią przegrody środkowej"}
+    ]
+  },
+  {
+    "name": "v2",
+    "saved": "2026-11-12T12:00:00.000Z",
+    "notes": "## Okucia i dodatki\n\n- Zawiasy do dwóch klap (fortepianowy na całą długość albo 3–4 zawiasy splatane na klapę)\n- Kołki rozporowe z wkrętami do przykręcenia boków do ścian\n- Konfirmaty lub wkręty do płyt, kołki drewniane i klej do ramki maskownicy\n- Klej montażowy do przyklejenia blatu do parapetu\n- Obrzeże na widoczne krawędzie płyt (szczególnie nad kaloryferem i na kolumnie)\n- Pasek filcu lub uszczelki pod klapę z blachy\n- 2–3 kątowniki meblowe do połączenia frontu kolumny z bokiem kolumny i do przykręcenia blatu kolumny do frontu\n- Drzwiczki boczne kolumny: 2 zawiasy (np. meblowe nawierzchniowe lub puszkowe do drzwi bocznych 90°), zatrzask magnetyczny przy froncie kolumny, mała gałka lub otwór na palec\n- Klej do drewna do wklejenia wypełnień w wcięciach blatu kolumny (ewentualnie rozety maskujące Ø35)\n- Taśma LED pod płytę pod parapetem (opcjonalnie)\n\nWymiary płyt są nominalne, bez luzu na nierówne ściany.\n\n## Kolejność składania\n\n1. **Piony.** Bok lewy i bok prawy (212×987) przykręcić do ścian bocznych, tylną krawędzią do ściany pod oknem. Przegrodę środkową ustawić tak, żeby jej lewa powierzchnia była 800 od lewej ściany.\n2. **Płyta pod parapetem.** Położyć na trzech pionach, dosunąć do ściany pod oknem; leży bezpośrednio pod spodem parapetu (1005). Skręcić z pionami od góry.\n3. **Listwa przednia.** Przykręcić do czoła płyty pod parapetem na całej szerokości (2100). Górna krawędź równo z górą parapetu (1045), dolna wystaje 10 poniżej płyty.\n4. **Blat.** Położyć na parapecie i na listwie przedniej, tylną krawędzią do okna, przodem równo z listwą (230 od ściany). Przykleić do parapetu klejem montażowym i skręcić z listwą przednią.\n5. **Prawa wnęka – wnętrze.** Półkę prawą zamocować między przegrodą a bokiem prawym, górną powierzchnią na 300. Tył prawy górny postawić przy ścianie, od spodu klapy do płyty pod parapetem.\n6. **Front prawy.** Przykręcić do czół przegrody i boku prawego oraz do czoła półki. Sięga od podłogi do 720; lewa krawędź równo z lewą powierzchnią przegrody środkowej (800 od lewej ściany), więc front zakrywa czoło przegrody. Od środka, równo ze spodem klapy, przykręcić do frontu listwę pod klapę.\n7. **Klapa prawa.** Zawiasami do tyłu prawego górnego, górna powierzchnia na 720. Przodem leży na listwie pod klapę. Luz 2 po bokach i z przodu.\n8. **Lewa wnęka – tył.** Tył lewy górny postawić przy ścianie nad kaloryferem, tak samo jak po prawej.\n9. **Ramka maskownicy.** Listwę górną i dolną (657 × 60) wstawić w płaszczyźnie frontu prawego między część stałą przegrody przy rurach (143 od lewej ściany) a lewą krawędź frontu prawego (800). Oba końce połączyć na kołki i klej (z lewej można dodatkowo przykręcić przez część stałą). Ramka licuje z frontem prawym. Część stałą przegrody trzeba więc postawić wcześniej (krok 12 przenieść przed krok 9).\n10. **Blacha maskownicy.** Przykręcić od tyłu listew ramki z zakładem 20 u góry i u dołu, do górnej listwy co ok. 150; z boków blacha dochodzi do części stałej przegrody przy rurach i do przegrody środkowej. Rury są w kolumnie po lewej, więc blacha nie potrzebuje wycięć.\n11. **Klapa lewa z blachy.** Zawias przynitować lub przykręcić do blachy i do tyłu lewego górnego. Klapa zaczyna się 145 od lewej ściany (2 luzu od blatu kolumny) i przodem na całej szerokości leży na górnej listwie ramki; pod spód nakleić filc.\n12. **Bok kolumny i część stała przegrody** (zrobić przed krokiem 9). Bok kolumny (358×720) przykręcić do lewej ściany, tylną krawędzią do czoła boku lewego, od 212 do 570 od ściany pod oknem. Część stałą przegrody przy rurach (702×60) postawić na podłodze, lewą powierzchnią 125 od lewej ściany, od 212 do 272 od ściany pod oknem; przykręcić kątownikiem do podłogi.\n13. **Front kolumny.** Płyta 143×720 przykręcona do czoła boku kolumny, 570–588 od ściany pod oknem; z prawej strony nie ma do czego jej przykręcić, więc dół przykręcić kątownikiem do podłogi, a górę do blatu kolumny (krok 14). Rury zostają w środku kolumny.\n14. **Blat kolumny.** Do boku lewego i boku kolumny przykręcić listwę pod blat kolumny (457×60), górą na 702, od tyłu lewego górnego do 5 przed pionami rur. Blat kolumny (552×125) leży na tej listwie i na części stałej przegrody; z przodu przykręcić go do frontu kolumny kątownikiem, między bokiem lewym/bokiem kolumny a krawędzią przegrody, od tyłu lewego górnego do frontu kolumny; górą na 720, równo z ramką i klapą lewą. Przed montażem wyciąć dwa wcięcia ok. 35 szer. od lewej krawędzi do ok. 55 od niej, w osiach pionów (ok. 470 i 520 od tylnej krawędzi płyty – zmierzyć na miejscu). Nasunąć płytę z prawej strony na rury, potem wkleić odcięte kawałki w szczeliny między rurą a bokiem (albo zamaskować rozetami). Blat zasłania też rurki biegnące wzdłuż lewej ściany nad kaloryferem; powyżej 720 piony są odsłonięte.\n15. **Drzwiczki boczne kolumny.** Płyta 694×293 między częścią stałą przegrody a frontem kolumny, lewą powierzchnią 125 od lewej ściany. Zawiasy przy tylnej krawędzi, do części stałej przegrody (oś obrotu w narożniku 143 od lewej ściany, 274 od ściany pod oknem); drzwiczki otwierają się w prawo, wzdłuż maskownicy. Luzy: 2 od części stałej, 3 od frontu kolumny (mniej nie wolno – przy otwieraniu przedni narożnik zbliża się do frontu), 6 od podłogi, 2 pod blatem. Zatrzask magnetyczny przy przedniej krawędzi (do frontu kolumny albo pod blatem kolumny). Przez drzwiczki jest dostęp do rur i do zaworu z boku.\n\n## Do sprawdzenia przed zamówieniem\n\n- Szerokość 2100 to wymiar pokoju bez luzu – zmierzyć na wysokości parapetu i przy podłodze, odjąć 2–3 na nierówności ścian.\n- Grubość parapetu (40) zmierzyć w kilku miejscach; od niej zależy wysokość listwy przedniej.\n- Odległość pionów rur od ściany pod oknem (480–560) i od lewej ściany (35–65) – od tego zależą głębokość boku kolumny (570), położenie frontu kolumny i wcięcia w blacie kolumny.\n- Przegroda przy rurach i drzwiczki stoją 125 od lewej ściany; rura dolna w wybrzuszeniu sięga ok. 120 – tylko 5 luzu. Zmierzyć, gdzie rura dolna jest najdalej od ściany.\n- Czy obie rurki odgałęzień skręcają do kaloryfera bliżej ściany niż 212 (za płaszczyzną ramki). Jeśli nie – część stała przegrody lub blacha trafią na rurę.\n- Sprawdzić, czy skrzydło okna otwiera się nad blatem (blat ma 18, szczelina pod oknem 17).\n- Zmierzyć, ile od ściany odstaje gałka zaworu – za maskownicą jest 22 luzu przed kaloryferem.\n- Założenia niepotwierdzone: szczelina 17 między parapetem a oknem jest pionowa; szerokość kaloryfera 580 obejmuje zawór i gałkę; dół kaloryfera 100 nad podłogą; parapet kończy się 10 przed każdą ścianą boczną; brak listew przypodłogowych (jeśli będą – uwzględnić w bokach, froncie, ramce i kolumnie).\n- Wysokość osłony LED (10) pasuje tylko do płaskiej taśmy bez profilu.\n",
+    "panels": [
+      {"name": "Blat na parapecie", "size": [210, 1.8, 25], "pos": [0, 104.5, -2]},
+      {"name": "Płyta pod parapetem", "size": [210, 1.8, 21.2], "pos": [0, 98.7, 0]},
+      {"name": "Listwa przednia", "size": [210, 6.8, 1.8], "pos": [0, 97.7, 21.2]},
+      {"name": "Bok lewy", "size": [1.8, 98.7, 21.2], "pos": [0, 0, 0]},
+      {"name": "Przegroda przy rurach – część stała", "size": [1.8, 70.2, 6], "pos": [12.5, 0, 21.2], "note": "do niej przykręcone lewe końce listew ramki; podpiera blat kolumny z tyłu"},
+      {"name": "Drzwiczki boczne kolumny", "size": [1.8, 69.4, 29.3], "pos": [12.5, 0.6, 27.4], "note": "otwierane w prawo; 2 zawiasy przy tylnej krawędzi, do części stałej przegrody; luz 2 mm od części stałej, 3 mm od frontu, 6 mm od podłogi, 2 mm pod blatem", "door": "back-right"},
+      {"name": "Front kolumny", "size": [14.3, 72, 1.8], "pos": [0, 0, 57]},
+      {"name": "Bok kolumny", "size": [1.8, 72, 35.8], "pos": [0, 0, 21.2], "note": "przy lewej ścianie, dosunięty do czoła boku lewego"},
+      {"name": "Blat kolumny", "size": [12.5, 1.8, 55.2], "pos": [1.8, 70.2, 1.8], "note": "od tyłu lewego górnego do frontu kolumny; 2 wcięcia ok. 35 mm od lewej krawędzi na piony rur"},
+      {"name": "Listwa pod blat kolumny", "size": [1.8, 6, 45.7], "pos": [1.8, 64.2, 1.8], "note": "przykręcona do boku lewego i boku kolumny, kończy się 5 mm przed pionami rur"},
+      {"name": "Przegroda środkowa", "size": [1.8, 98.7, 21.2], "pos": [80, 0, 0]},
+      {"name": "Bok prawy", "size": [1.8, 98.7, 21.2], "pos": [208.2, 0, 0]},
+      {"name": "Tył prawy górny", "size": [126.4, 28.5, 1.8], "pos": [81.8, 70.2, 0]},
+      {"name": "Klapa (półka prawa 72)", "size": [126, 1.8, 19.2], "pos": [82, 70.2, 1.8], "lid": true, "note": "klapa na zawiasach, luz 2 mm"},
+      {"name": "Półka prawa 30", "size": [126.4, 1.8, 21.2], "pos": [81.8, 28.2, 0]},
+      {"name": "Listwa pod klapę", "size": [126.4, 6, 1.8], "pos": [81.8, 64.2, 19.4], "note": "przykręcona do frontu od środka"},
+      {"name": "Ramka maskownicy – dół", "size": [65.7, 6, 1.8], "pos": [14.3, 0, 21.2], "note": "od części stałej przegrody przy rurach do lewej krawędzi frontu prawego; oba końce na kołki i klej"},
+      {"name": "Ramka maskownicy – góra", "size": [65.7, 6, 1.8], "pos": [14.3, 66, 21.2], "note": "od części stałej przegrody przy rurach do lewej krawędzi frontu prawego; oba końce na kołki i klej"},
+      {"name": "Maskownica (blacha perf.)", "size": [65.7, 64, 0.1], "pos": [14.3, 4, 21.1], "mesh": true, "note": "blacha perforowana 1 mm, od tyłu ramki (zakład 20 mm u góry i u dołu); z boków od przegrody do przegrody"},
+      {"name": "Tył lewy górny", "size": [78.2, 28.5, 1.8], "pos": [1.8, 70.2, 0]},
+      {"name": "Klapa lewa (blacha perf.)", "size": [65.3, 0.1, 21.2], "pos": [14.5, 72, 1.8], "mesh": true, "lid": true, "note": "blacha perforowana 1 mm, na zawiasach, przodem leży na ramce; luz 2 mm od blatu kolumny"},
+      {"name": "Front prawy", "size": [130, 72, 1.8], "pos": [80, 0, 21.2], "note": "lewa krawędź równo z lewą powierzchnią przegrody środkowej"}
+    ]
+  }
+]
+</script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -369,9 +418,10 @@ const T = 1.8;                                  // grubość płyty 18 mm
 const DEPTH = 25 - R.winRecess;                // głębokość zabudowy od ściany pod oknem (23 cm)
 const SILL_B = R.sillH - R.sillT;               // spód parapetu (100,5)
 const LED = 1;                                  // ile listwa przednia wystaje poniżej płyty spodniej (osłona LED)
-const DEFAULT_PANELS = [];                      // wersja domyślna: sam pokój, bez mebli (projekty są w folderze wersje/)
-// --- wersjonowanie: elementy mogą pochodzić z pliku JSON (zapamiętanego w localStorage) zamiast z listy powyżej ---
-const STORE_KEY = 'parapet.wersja.v1';
+const DEFAULT_PANELS = [];                      // gdy nie ma żadnej poprawnej wersji: sam pokój
+// --- wersje mebla: zapisane w bloku <script id="wersje"> powyżej (dodaje się je, edytując index.html) ---
+const SEL_KEY = 'parapet.wybrana';              // localStorage: nazwa ostatnio wybranej wersji
+try { localStorage.removeItem('parapet.wersja.v1'); } catch { /* stary sposób zapisu – już nieużywany */ }
 // drzwiczki (pionowa płyta cienka w X): krawędź z zawiasami (front = większe z, back = mniejsze z)
 // i strona otwierania (right = +x, left = -x); wartość = znak kąta obrotu wokół osi Y
 const DOOR_SWING = { 'front-right': -1, 'front-left': 1, 'back-right': 1, 'back-left': -1 };
@@ -382,11 +432,12 @@ const validPanels = a => Array.isArray(a) && a.length > 0 && a.every(p => p && t
   [...p.size, ...p.pos].every(Number.isFinite) && p.size.every(v => v > 0) &&
   (p.door === undefined || (DOOR_SWING[p.door] !== undefined && !p.lid && !p.notch && !p.mesh &&
     p.size[0] <= p.size[1] && p.size[0] <= p.size[2])));   // drzwiczki: tylko pionowa płyta cienka w X
-let stored = null;
-try { stored = JSON.parse(localStorage.getItem(STORE_KEY)); } catch { /* brak lub uszkodzony zapis */ }
-if (!stored || !validPanels(stored.panels)) stored = null;
-const PANELS = stored ? stored.panels : DEFAULT_PANELS;
-const versionName = stored ? (stored.name || 'bez nazwy') : null;   // null = wersja domyślna z index.html
+let VERSIONS = [];
+try { VERSIONS = JSON.parse(document.getElementById('wersje').textContent); } catch (err) { console.error('Blok wersji w index.html jest uszkodzony', err); }
+if (!Array.isArray(VERSIONS)) VERSIONS = [];
+let current = null;                             // wybrana wersja (obiekt z VERSIONS) albo null, gdy brak wersji
+let PANELS = DEFAULT_PANELS;
+let panelMeshes = [];                           // siatka 3D dla PANELS[i] (osobno, żeby nie zaśmiecać danych wersji)
 
 const panelMat = new THREE.MeshStandardMaterial({ color: 0xc89b5e, roughness: 0.7 });
 const panelEdge = new THREE.LineBasicMaterial({ color: 0x5a4020 });
@@ -407,6 +458,10 @@ function perfMat(w, h) {                        // blacha perforowana: szara z p
   return new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.3,
     side: THREE.DoubleSide, metalness: 0.5, roughness: 0.5 });
 }
+function buildPanels() {
+  panels.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+  panels.clear();
+  lids.length = 0; doors.length = 0; panelMeshes = [];
 for (const p of PANELS) {
   let m;
   if (p.notch) {                                // płyta pionowa (bok) z wycięciem: profil w płaszczyźnie Z-Y
@@ -449,9 +504,10 @@ for (const p of PANELS) {
     panels.add(m);
   } else m = box(...p.size, ...p.pos, p.color ? new THREE.MeshStandardMaterial({ color: p.color, roughness: 0.7 }) : panelMat, panels);
   m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), panelEdge));
-  p.mesh3d = m;
+  panelMeshes.push(m);
 }
-{ // lista płyt do zamówienia (mm): dwa większe wymiary to format, najmniejszy to grubość
+}
+function buildCut() { // lista płyt do zamówienia (mm): dwa większe wymiary to format, najmniejszy to grubość
   const mm = v => Math.round(v * 10);
   const note = p => p.note || (p.notch ? `wycięcie ${mm(p.notch[0])} × ${mm(p.notch[1])} na parapet` :
     p.door ? `drzwiczki: ${DOOR_PL[p.door]}` : '');
@@ -473,7 +529,7 @@ for (const p of PANELS) {
     const sillB = mm(SILL_B), sillT = mm(R.sillH);
     const md = `# Zabudowa parapetu z maskownicą kaloryfera
 
-Wygenerowano z modelu 3D. Wersja: ${versionName || 'domyślna'}. Wszystkie wymiary w milimetrach.
+Wygenerowano z modelu 3D. Wersja: ${current ? current.name : 'pusty pokój'}. Wszystkie wymiary w milimetrach.
 
 ## Pomieszczenie
 
@@ -494,7 +550,7 @@ ${boards.map(row).join('\n')}
 ${head}
 ${sheets.map(row).join('\n')}
 
-${stored && stored.notes ? stored.notes : ''}`;
+${current && typeof current.notes === 'string' ? current.notes : ''}`;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown;charset=utf-8' }));
     a.download = 'zabudowa-parapetu.md';
@@ -580,7 +636,9 @@ function dim(a, b, off = [0, 0, 0], opt = {}) {
 // wymiary mebla [mm]: dla każdego elementu dwa większe wymiary wzdłuż jego przednich/górnych krawędzi
 const furnDims = new THREE.Group();
 scene.add(furnDims);
-{
+function buildFurnDims() {
+  furnDims.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+  furnDims.clear();                              // CSS2DObject sam usuwa swoją etykietę z DOM
   const fo = { group: furnDims, cls: 'dim furn', scale: 10,
     mat: new THREE.LineBasicMaterial({ color: 0x1a56b0, depthTest: false, transparent: true }) };
   PANELS.forEach((p, i) => {
@@ -609,9 +667,9 @@ const applyDims = () => {
 // podświetlenie elementu wskazanego na liście (widoczne także przez inne płyty)
 const hlMat = new THREE.MeshBasicMaterial({ color: 0xff8a00, transparent: true, opacity: 0.8, depthTest: false, side: THREE.DoubleSide });
 function setHovered(i) {
-  if (hovered !== null) { const m = PANELS[hovered].mesh3d; m.material = m.userData.beforeHl; m.renderOrder = 0; }
+  if (hovered !== null && panelMeshes[hovered]) { const m = panelMeshes[hovered]; m.material = m.userData.beforeHl; m.renderOrder = 0; }
   hovered = i;
-  if (i !== null) { const m = PANELS[i].mesh3d; m.userData.beforeHl = m.material; m.material = hlMat; m.renderOrder = 5; }
+  if (i !== null) { const m = panelMeshes[i]; m.userData.beforeHl = m.material; m.material = hlMat; m.renderOrder = 5; }
   applyDims();
 }
 {
@@ -661,54 +719,34 @@ document.querySelectorAll('#views .seg').forEach(seg => seg.querySelectorAll('bu
     setMode(seg.dataset.g, b.dataset.m);
   };
 }));
-// ---------- wersje: zapis / odczyt elementów z pliku JSON ----------
+// ---------- wersje: przełącznik ----------
 {
   const $ = id => document.getElementById(id);
-  const r2 = v => Math.round(v * 100) / 100;
-  $('verName').textContent = versionName ? `Wczytana: ${versionName}` : 'Brak mebli (sam pokój)';
-  $('verReset').disabled = !versionName;
-  $('verSave').disabled = $('verInput').disabled = PANELS.length === 0;   // pustego pokoju nie zapisujemy
-  if (PANELS.length === 0) { $('verSave').title = 'Brak mebli do zapisania'; $('verInput').placeholder = 'brak mebli do zapisania'; }
-  $('verReset').title = versionName ? 'Usuwa wczytaną wersję z pamięci i wraca do domyślnej' : 'Nie ma wczytanego pliku';
-  if (versionName) $('verInput').value = versionName;
-  const msg = (t, err) => { $('verMsg').textContent = t; $('verMsg').classList.toggle('err', !!err); };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const showable = VERSIONS.filter(v => v && validPanels(v.panels));
+  for (const v of VERSIONS) if (!showable.includes(v)) console.error('Wersja z niepoprawnymi elementami pominięta:', v && v.name);
 
-  $('verSave').onclick = () => {
-    if (PANELS.length === 0) return;
-    const name = $('verInput').value.trim() || versionName || 'wersja';
-    const data = {
-      format: 'parapet-mebel', formatVersion: 1, name, saved: new Date().toISOString(),
-      units: 'cm; size = [X szer., Y wys., Z głęb.], pos = lewy dolny tylny narożnik',
-      notes: stored && stored.notes ? stored.notes : '',   // opis złożenia (Markdown), trafia do eksportu .md
-      panels: PANELS.map(p => {
-        const o = { name: p.name, size: p.size.map(r2), pos: p.pos.map(r2) };
-        for (const k of ['mesh', 'lid', 'door', 'note', 'notch']) if (p[k] !== undefined) o[k] = p[k];
-        return o;
-      }),
-    };
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-    a.download = 'mebel-' + name.toLowerCase().replace(/[^a-z0-9ąćęłńóśźż_-]+/gi, '-') + '.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
-    msg(`Zapisano plik ${a.download}`);
+  function select(v) {
+    setHovered(null);
+    current = v; PANELS = v ? v.panels : DEFAULT_PANELS;
+    buildPanels(); buildCut(); buildFurnDims();
+    const act = document.querySelector('.seg[data-g="panels"] button.act');
+    setMode('panels', act ? act.dataset.m : 'on');                   // zachowaj tryb widoczności mebli
+    applyDims();
+    try { if (v) localStorage.setItem(SEL_KEY, v.name); } catch { /* bez pamięci */ }
+    $('verList').innerHTML = showable.length
+      ? showable.map((x, i) => `<button data-i="${i}"${x === current ? ' class="act"' : ''}>${esc(x.name)}</button>`).join('')
+      : '<span class="hint">Brak wersji w index.html</span>';
+  }
+
+  $('verList').onclick = e => {
+    const b = e.target.closest('button[data-i]');
+    if (b) select(showable[+b.dataset.i]);
   };
 
-  $('verLoad').onclick = () => $('verFile').click();
-  $('verFile').onchange = async e => {
-    const file = e.target.files[0]; if (!file) return;
-    try {
-      const data = JSON.parse(await file.text());
-      if (data.format !== 'parapet-mebel' || !validPanels(data.panels))
-        throw new Error('to nie jest plik wersji mebla');
-      localStorage.setItem(STORE_KEY, JSON.stringify({ name: data.name || file.name.replace(/\.json$/i, ''),
-        panels: data.panels, notes: typeof data.notes === 'string' ? data.notes : '' }));
-      location.reload();                         // po przeładowaniu elementy wczytają się z pamięci
-    } catch (err) { msg('Nie udało się wczytać: ' + err.message, true); }
-    e.target.value = '';
-  };
-
-  $('verReset').onclick = () => { localStorage.removeItem(STORE_KEY); location.reload(); };
+  let start = null;
+  try { const n = localStorage.getItem(SEL_KEY); start = showable.find(v => v.name === n); } catch { /* bez pamięci */ }
+  select(start || showable[0] || null);
 }
 
 const lidToggle = document.getElementById('lidToggle');

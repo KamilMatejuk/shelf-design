@@ -2,8 +2,9 @@
 
 A single-page 3D viewer (`index.html`, three.js) for designing a DIY built-in unit that covers a
 window sill, adds storage and hides a radiator. The room is fixed. Furniture designs are data:
-one JSON file per design in `wersje/`. **Adding a new design means writing a new JSON file – not
-editing `index.html`.**
+a JSON array of versions inline in `index.html`, in the `<script type="application/json"
+id="wersje">` block. **Adding a new design means adding an entry to that block – not touching the
+viewer code.**
 
 The owner speaks Polish. All UI text, element names and assembly notes are in Polish. Reply in
 the language the owner writes in.
@@ -18,22 +19,22 @@ python3 -m http.server 48765 --bind 127.0.0.1     # port 8765 is taken by someth
 Open `http://127.0.0.1:48765/index.html`. three.js 0.160 loads from the jsDelivr CDN, so internet
 is needed. The browser caches aggressively: reload with Ctrl+Shift+R, or add `?v=N` to the URL.
 
-The page starts with an empty room. A design is loaded with **Wczytaj z pliku** in the left panel;
-it is then kept in `localStorage` (key `parapet.wersja.v1`) and survives a refresh. **Wyczyść
-wczytany plik** returns to the empty room.
+The **Wersja** section of the left panel has one button per version; switching rebuilds the
+scene in place. The page opens on the version last selected (remembered in `localStorage`, key
+`parapet.wybrana`), or on the first one. The page is read-only: versions are added, renamed or
+removed only by editing the `wersje` block in `index.html` when the owner asks for it.
 
 ## Files
 
 | Path | What it is |
 |---|---|
-| `index.html` | Viewer: room geometry, panel renderer, dimensions, parts list, export, load/save |
-| `wersje/mebel-*.json` | Furniture designs, one per file. `mebel-v1.json` is the reference design (17 parts, passes the overlap check) |
+| `index.html` | Viewer: room geometry, panel renderer, dimensions, parts list, export, version switch. The `wersje` block holds all designs; `v1` is the reference design (17 parts, passes the overlap check) |
 | `pokoj.jpeg`, `rzut-rur.jpeg` | Owner's photo of the room and top-down sketch of the pipes |
 | `.playwright-mcp/` | Scratch screenshots from testing; safe to ignore |
 
 ## Coordinate system
 
-Units are **centimetres** in the JSON and in the code. The parts list and exports show millimetres.
+Units are **centimetres** in the version data and in the code. The parts list and exports show millimetres.
 
 - **x** – from the left wall to the right: `0 … 210`
 - **y** – from the floor up: `0 … 250`
@@ -63,27 +64,25 @@ marked as an estimate.
 Both branch pipes cross any front plane placed between z 19 and z 48 near the left wall. A front
 panel in the left bay needs cut-outs for them, or must stay clear of x < 12 at those heights.
 
-## Design file format
+## Version format
+
+The `wersje` block is a JSON array; its order is the button order. One entry:
 
 ```json
 {
-  "format": "parapet-mebel",
-  "formatVersion": 1,
   "name": "v1",
   "saved": "2026-11-12T11:02:28.000Z",
-  "units": "cm; size = [X szer., Y wys., Z głęb.], pos = lewy dolny tylny narożnik",
   "notes": "## Okucia i dodatki\n\n- ...\n\n## Kolejność składania\n\n1. ...\n",
   "panels": [
-    { "name": "Blat na parapecie", "size": [210, 1.8, 25], "pos": [0, 104.5, -2] },
-    { "name": "Klapa (półka prawa 72)", "size": [126, 1.8, 19.2], "pos": [82, 70.2, 1.8],
-      "lid": true, "note": "klapa na zawiasach, luz 2 mm" }
+    {"name": "Blat na parapecie", "size": [210, 1.8, 25], "pos": [0, 104.5, -2]},
+    {"name": "Klapa (półka prawa 72)", "size": [126, 1.8, 19.2], "pos": [82, 70.2, 1.8], "lid": true, "note": "klapa na zawiasach, luz 2 mm"}
   ]
 }
 ```
 
-The loader rejects a file unless `format` is exactly `"parapet-mebel"`, `panels` is a non-empty
-array, and every panel has a string `name`, a 3-number `size` with all values > 0, and a
-3-number `pos`.
+`name` must be non-empty and unique. Keep one panel per line. The text is inside a `<script>` tag, so write `<` as `\u003c`. A version is shown only
+if `panels` is a non-empty array and every panel has a string `name`, a 3-number `size` with all
+values > 0, and a 3-number `pos`; otherwise it is skipped with a console error.
 
 ### Panel fields
 
@@ -120,16 +119,18 @@ Rewrite the notes whenever the panels change; stale assembly steps are worse tha
 
 ## Adding a new design
 
-1. Copy the closest existing file in `wersje/` to `wersje/mebel-<short-slug>.json`. Never
-   overwrite an existing version unless the owner asks for that.
-2. Set a new `name` and edit `panels`.
+1. Copy the closest existing entry in the `wersje` block and append it as a new entry (or after
+   the one it is based on). Never change an existing version unless the owner asks for that.
+2. Set a new unique `name` (`v3-<short-slug>`) and `saved`, and edit `panels`.
 3. Check every panel against the obstacle table above and against the other panels. Panels may
    touch but must not overlap. This script prints overlaps:
 
    ```bash
-   python3 - wersje/mebel-<short-slug>.json <<'EOF'
-   import json, sys, itertools
-   d = json.load(open(sys.argv[1]))
+   python3 - '<version name>' <<'EOF'
+   import json, re, sys, itertools
+   html = open('index.html', encoding='utf-8').read()
+   block = re.search(r'<script type="application/json" id="wersje">\n(.*?)\n</script>', html, re.S).group(1)
+   d = next(v for v in json.loads(block) if v['name'] == sys.argv[1])
    obstacles = {
        'parapet': ([1, 100.5, -2], [208, 4, 9]),
        'kaloryfer': ([29, 10, 5], [48, 59, 14]),
@@ -155,9 +156,9 @@ Rewrite the notes whenever the panels change; stale assembly steps are worse tha
    A panel that wraps the sill on purpose (like a notched side) will be reported; that is fine if
    it has a matching `notch`.
 4. Rewrite `notes` for the new design.
-5. Load the file in the viewer and look at it from the front, the side and with **Pokój: szkielet**.
+5. Select the version in the viewer and look at it from the front, the side and with **Pokój: szkielet**.
    Tick **Klapy i drzwiczki otwarte** if there are lids. Check the browser console for errors.
-6. Tell the owner the file path and list the cut sizes in mm. State every assumption you made.
+6. Tell the owner the version name and list the cut sizes in mm. State every assumption you made.
 
 ## Construction rules agreed with the owner
 
@@ -172,7 +173,7 @@ Rewrite the notes whenever the panels change; stale assembly steps are worse tha
   at the sides.
 - Keep the radiator bay ventilated: perforated metal (≥ 40 % open area), air in at the bottom, out
   at the top. Do not box the radiator in with solid board.
-- Board sizes in the file are nominal, with no allowance for uneven walls. Say so in `notes`.
+- Board sizes in the data are nominal, with no allowance for uneven walls. Say so in `notes`.
 
 Assumptions not yet confirmed by the owner – keep them visible in `notes`:
 
@@ -186,22 +187,22 @@ Assumptions not yet confirmed by the owner – keep them visible in `notes`:
 
 Only when the owner asks for a viewer feature. Things to know:
 
-- `DEFAULT_PANELS` stays an empty array – the default view is the empty room.
+- `DEFAULT_PANELS` stays an empty array – used only when there is no valid version.
 - Do not change the values in `R` unless the owner gives new measurements.
-- `PANELS` is either the stored design or the empty default. The parts list, dimension labels,
-  hover highlight and `.md` export are all generated from it.
-- `validPanels()` is the single place that defines what a loadable design is.
-- Saving is disabled when there are no panels.
+- `VERSIONS` is the parsed `wersje` block; `current` is the selected version (`null` only when there is none).
+  `PANELS` is `current.panels`, or the empty default only when there is no valid version. `select(v)` rebuilds the panels, parts list
+  and furniture dimensions (`buildPanels`, `buildCut`, `buildFurnDims`) without a reload.
+- 3D meshes are kept in `panelMeshes[i]`, never on the panel objects.
+- `validPanels()` is the single place that defines what a showable design is.
 - Avoid `alert`/`confirm`/`prompt`; show messages in the page.
 
 ## Verifying with Playwright
 
 ```
 navigate  http://127.0.0.1:48765/index.html?v=<n>
-click     #verLoad            → then upload the JSON file
+click     #verList button:has-text("<version name>")
 screenshot                    (must be saved under the project folder)
 console messages (level error) – expect none
-click     #verReset           → back to the empty room when done
 ```
 
 Useful selectors: view buttons `button[data-v="persp|front|top|side"]`, visibility

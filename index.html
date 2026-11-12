@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Parapet – model 3D</title>
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #dfe6ec; font-family: system-ui, sans-serif; }
@@ -69,6 +69,44 @@
     font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .dim.furn { color: #1a56b0; border-color: #1a56b0; }
   #labels { position: fixed; inset: 0; pointer-events: none; }
+  body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+  .h-touch { display: none; }
+  @media (hover: none) { .h-mouse { display: none; } .h-touch { display: inline; } }
+  /* telefon: karty jako wysuwane arkusze otwierane z dolnego paska */
+  #mbar { display: none; }
+  @media (max-width: 760px), (max-height: 500px) {
+    #mbar { display: flex; gap: 8px; position: fixed; z-index: 15; left: 8px; right: 8px;
+      bottom: calc(8px + env(safe-area-inset-bottom)); }
+    #mbar button { flex: 1; border: 0; border-radius: 10px; padding: 11px 8px; font: inherit; font-size: 15px; font-weight: 600;
+      background: rgba(255,255,255,.94); color: #223; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
+    #mbar button.act { background: #2f5fb3; color: #fff; }
+    .card { display: none; }
+    #views.open, #cut.open { display: block; top: auto; left: 8px; right: 8px; width: auto; box-sizing: border-box;
+      bottom: calc(64px + env(safe-area-inset-bottom)); overflow: auto;
+      max-height: calc(50vh - 72px); max-height: calc(50dvh - 72px - env(safe-area-inset-bottom));   /* arkusz + pasek ≤ pół ekranu */
+      -webkit-overflow-scrolling: touch; overscroll-behavior: contain; font-size: 14px; }
+    #views button { padding: 9px 4px; }
+    #views .seg button { padding: 7px 10px; font-size: 13px; }
+    #views .vers { gap: 6px; }
+    #views .vers button { padding: 8px 12px; font-size: 13px; }
+    #views .steps button { padding: 8px 14px; font-size: 14px; }
+    #views .steps { gap: 10px; }
+    #views .steps input[type=range] { height: 32px; }
+    #views .steplbl { min-height: 2.7em; }
+    #views input[type=checkbox] { width: 22px; height: 22px; }
+    #views .row { margin-top: 10px; }
+    #cut summary { padding: 4px 0; }
+    #cut .tbl { overflow-x: auto; }
+    #cut td { padding: 3px 10px 3px 0; }
+    #cut .tbl td:nth-child(3) { white-space: nowrap; }
+    #cut .warn { font-size: 18px; padding: 0 4px; }
+    #cut .cost input { width: 60px; padding: 3px; font-size: 16px; }   /* 16px: iOS nie przybliża przy pisaniu */
+    #cut button { padding: 11px; }
+    #tip { max-width: calc(100vw - 32px); }
+  }
+  @media (max-height: 500px) and (min-width: 600px) {   /* telefon poziomo: arkusz z boku */
+    #mbar { left: auto; width: 320px; }
+    #views.open, #cut.open { left: auto; right: 8px; width: 320px; top: 8px; bottom: calc(64px + env(safe-area-inset-bottom)); max-height: none; }  }
 </style>
 <script type="importmap">
 { "imports": {
@@ -118,8 +156,9 @@
   <section>
     <details id="info"></details>
   </section>
-  <section class="hint">Mysz: obrót (lewy przycisk), przesuwanie (prawy), zoom (kółko)</section>
+  <section class="hint"><span class="h-mouse">Mysz: obrót (lewy przycisk), przesuwanie (prawy), zoom (kółko)</span><span class="h-touch">Dotyk: obrót (jeden palec), zoom i przesuwanie (dwa palce). Dotknij wiersza listy, by podświetlić element.</span></section>
 </div>
+<nav id="mbar"><button data-sheet="views">Ustawienia</button><button data-sheet="cut" id="mbarCut">Elementy</button></nav>
 <script type="application/json" id="wersje">
 [
   {
@@ -379,10 +418,41 @@ const VIEWS = {
   top:   [[R.roomW / 2, 520, 60.01],  [R.roomW / 2, 0, 60]],
   side:  [[R.roomW + 380, 90, 60],    [R.roomW / 2, 90, 60]],
 };
+const viewFit = () => Math.max(1, 0.75 / camera.aspect);
+let camFit = 1;
 function setView(name) {
   const [p, t] = VIEWS[name];
-  camera.position.set(...p); controls.target.set(...t); controls.update();
+  // wąski ekran (telefon pionowo): kamera dalej, żeby cała szerokość ściany zmieściła się w kadrze
+  const fit = camFit = viewFit();
+  const pos = new THREE.Vector3(...p).sub(new THREE.Vector3(...t)).multiplyScalar(fit).add(new THREE.Vector3(...t));
+  camera.position.copy(pos); controls.target.set(...t); controls.update();
 }
+// telefon: przy otwartym arkuszu środek rysunku przesuwa się na wolną część ekranu (górę albo lewą stronę)
+// Tu liczony jest tylko cel; przejście do niego jest płynne (stepViewOffset w pętli rysowania).
+const vo = { x: 0, y: 0, zoom: 1, tx: 0, ty: 0, tzoom: 1, dirty: false };
+function updateViewOffset() {
+  const c = mobileUI() && document.querySelector('#views.open, #cut.open');
+  const W = innerWidth, H = innerHeight;
+  vo.dirty = true;                                                // np. po zmianie rozmiaru okna
+  if (!c) { vo.tx = vo.ty = 0; vo.tzoom = 1; return; }
+  const r = c.getBoundingClientRect(), side = r.top < H / 4;      // arkusz z boku (telefon poziomo)
+  const free = side ? r.left / W : r.top / H;                     // ułamek ekranu wolny od arkusza
+  vo.tzoom = Math.min(1, Math.max(0.6, free * 1.7));
+  vo.tx = side ? (W - r.left) / 2 : 0;
+  vo.ty = side ? 0 : (H - r.top) / 2;
+}
+function stepViewOffset() {
+  const moving = Math.abs(vo.tx - vo.x) + Math.abs(vo.ty - vo.y) + Math.abs(vo.tzoom - vo.zoom) * 500 > 0.3;
+  if (!moving && !vo.dirty) return;
+  const k = moving ? 0.15 : 1;                                    // ostatni krok: dokładnie do celu
+  vo.x += (vo.tx - vo.x) * k; vo.y += (vo.ty - vo.y) * k; vo.zoom += (vo.tzoom - vo.zoom) * k;
+  vo.dirty = moving;
+  camera.zoom = vo.zoom;
+  if (vo.x || vo.y) camera.setViewOffset(innerWidth, innerHeight, vo.x, vo.y, innerWidth, innerHeight);
+  else camera.clearViewOffset();                                  // też przelicza macierz rzutowania
+}
+const touchUI = () => matchMedia('(hover: none)').matches;          // ekran dotykowy bez myszy
+const mobileUI = () => matchMedia('(max-width: 760px), (max-height: 500px)').matches;
 setView('persp');
 document.querySelectorAll('#views button[data-v]').forEach(b => b.onclick = () => setView(b.dataset.v));
 
@@ -702,10 +772,11 @@ function buildCut() { // lista płyt do zamówienia (mm): dwa większe wymiary t
     const d = [...p.size].sort((a, b) => b - a);
     return `<tr data-i="${i}"><td>${i + 1}</td><td>${p.name}</td><td>${mm(d[0])} × ${mm(d[1])}</td><td>${mm(d[2])}</td><td>${note(p) ? `<span class="warn" data-tip="${note(p)}">⚠</span>` : ''}</td></tr>`;
   }).join('');
-  document.getElementById('cut').innerHTML = `<details><summary>Lista elementów [mm] (${PANELS.length})</summary><table>` +
-    '<tr><th>#</th><th>Element</th><th>Format</th><th>Grub.</th><th></th></tr>' + rowsHtml + '</table>' +
+  document.getElementById('cut').innerHTML = `<details${mobileUI() ? ' open' : ''}><summary>Lista elementów [mm] (${PANELS.length})</summary><div class="tbl"><table>` +
+    '<tr><th>#</th><th>Element</th><th>Format</th><th>Grub.</th><th></th></tr>' + rowsHtml + '</table></div>' +
     costHtml() + '<button id="exportMd">Eksport do .md</button></details>';
   fillCost();
+  document.getElementById('mbarCut').textContent = `Elementy (${PANELS.length})`;
   document.querySelectorAll('#cut .cost input').forEach(inp => inp.addEventListener('input', () => {
     const v = parseFloat(inp.value.replace(',', '.'));
     if (!Number.isFinite(v) || v < 0) return;
@@ -760,14 +831,21 @@ ${current && typeof current.notes === 'string' ? current.notes : ''}`;
 // podpowiedź po najechaniu na ikonę ostrzeżenia w liście elementów
 {
   const tip = document.getElementById('tip'), cut = document.getElementById('cut');
-  cut.addEventListener('mouseover', e => {
-    const w = e.target.closest('.warn'); if (!w) return;
+  const show = w => {
     tip.textContent = w.dataset.tip; tip.style.display = 'block';
     const r = w.getBoundingClientRect();
-    tip.style.top = (r.bottom + 6) + 'px';
+    tip.style.top = Math.min(r.bottom + 6, innerHeight - tip.offsetHeight - 8) + 'px';
     tip.style.left = Math.max(8, r.right - tip.offsetWidth) + 'px';
+  };
+  cut.addEventListener('mouseover', e => { const w = e.target.closest('.warn'); if (w && !touchUI()) show(w); });
+  cut.addEventListener('mouseout', e => { if (e.target.closest('.warn') && !touchUI()) tip.style.display = 'none'; });
+  // dotyk: podpowiedź po dotknięciu ⚠, znika po dotknięciu gdziekolwiek indziej
+  document.addEventListener('click', e => {
+    if (!touchUI()) return;
+    const w = e.target.closest('#cut .warn');
+    if (w && tip.style.display !== 'block') show(w); else tip.style.display = 'none';
   });
-  cut.addEventListener('mouseout', e => { if (e.target.closest('.warn')) tip.style.display = 'none'; });
+  cut.addEventListener('scroll', () => { tip.style.display = 'none'; });
 }
 
 // ---------- wymiary ----------
@@ -875,11 +953,34 @@ function setHovered(i) {
 {
   const cut = document.getElementById('cut');
   cut.addEventListener('mouseover', e => {
+    if (touchUI()) return;
     const tr = e.target.closest('tr[data-i]');
     const i = tr ? +tr.dataset.i : null;
     if (i !== hovered) setHovered(i);
   });
-  cut.addEventListener('mouseleave', () => setHovered(null));
+  cut.addEventListener('mouseleave', () => { if (!touchUI()) setHovered(null); });
+  // dotyk: dotknięcie wiersza podświetla element, ponowne – gasi
+  cut.addEventListener('click', e => {
+    if (!touchUI()) return;
+    const tr = e.target.closest('tr[data-i]'); if (!tr) return;
+    setHovered(+tr.dataset.i === hovered ? null : +tr.dataset.i);
+  });
+}
+// telefon: dolny pasek otwiera jedną kartę naraz jako arkusz
+{
+  const bar = document.getElementById('mbar');
+  bar.onclick = e => {
+    const b = e.target.closest('button[data-sheet]'); if (!b) return;
+    const card = document.getElementById(b.dataset.sheet), open = !card.classList.contains('open');
+    document.querySelectorAll('.card.open').forEach(c => c.classList.remove('open'));
+    bar.querySelectorAll('button').forEach(x => x.classList.remove('act'));
+    if (open) {
+      card.classList.add('open'); b.classList.add('act');
+      const d = card.querySelector(':scope > details'); if (d) d.open = true;
+    }
+    document.getElementById('tip').style.display = 'none';
+    updateViewOffset();
+  };
 }
 dimsToggle.onchange = furnToggle.onchange = applyDims; applyDims();
 
@@ -887,6 +988,13 @@ addEventListener('resize', () => {
   labelRenderer.setSize(innerWidth, innerHeight);
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
+  updateViewOffset();
+  // obrót telefonu: odsuń/przybliż kamerę o zmianę dopasowania, zachowując kąt patrzenia
+  const f = viewFit();
+  if (f !== camFit) {
+    camera.position.sub(controls.target).multiplyScalar(f / camFit).add(controls.target);
+    camFit = f; controls.update();
+  }
 });
 // tryby widoczności: pełny / półprzezroczysty szkielet / ukryty
 const ghostMats = {
@@ -994,6 +1102,7 @@ renderer.setAnimationLoop(() => {
   for (const l of lids) l.rotation.x += (target - l.rotation.x) * 0.12;
   const open = lidToggle.checked ? THREE.MathUtils.degToRad(85) : 0;
   for (const { pivot, sign } of doors) pivot.rotation.y += (sign * open - pivot.rotation.y) * 0.12;
+  stepViewOffset();
   controls.update(); renderer.render(scene, camera); labelRenderer.render(scene, camera); });
 </script>
 </body>

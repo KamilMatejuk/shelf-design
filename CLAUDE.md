@@ -208,6 +208,14 @@ Only when the owner asks for a viewer feature. Things to know:
   per distinct panel `step`, last = everything. Panels of later steps are hidden (with their
   hinges – `panelRoots[i]` holds all scene objects of panel i), panels of the current step get
   orange edges, and their dimensions follow. `select(v)` resets it to the full unit.
+- **Mobile** (`max-width: 760px` or `max-height: 500px`, `mobileUI()`): both cards are hidden and
+  open one at a time as sheets from the bottom bar `#mbar` (class `open` on `#views` / `#cut`;
+  sideways on a landscape phone). Sheet + bar take at most half the screen and the sections keep their desktop
+  order; `updateViewOffset()` shifts the
+  render centre (`camera.setViewOffset`) into the free half while a sheet is open; it only sets the target (`vo`), and
+  `stepViewOffset()` in the render loop eases toward it. On touch screens (`touchUI()`, `hover: none`), tapping a parts-list
+  row toggles the highlight and tapping ⚠ shows the note. In portrait, `setView` moves the camera
+  back (`viewFit`) so the whole wall fits, and `resize` rescales it when the phone is rotated.
 
 ## Verifying with Playwright
 
@@ -221,4 +229,4 @@ console messages (level error) – expect none
 Useful selectors: view buttons `button[data-v="persp|front|top|side"]`, visibility
 `.seg[data-g="room|panels"] button[data-m="on|ghost|off"]`, `#dimsToggle`, `#furnToggle`,
 `#lidToggle`, assembly slider `#stepRange` (+ `#stepPrev`, `#stepNext`, label `#stepLabel`),
-parts list `#cut summary`, row `#cut tr[data-i="N"]`, export `#exportMd`.
+parts list `#cut summary`, mobile bar `#mbar button[data-sheet="views|cut"]` (use a 390×844 viewport), row `#cut tr[data-i="N"]`, export `#exportMd`.

@@ -92,7 +92,7 @@
   </section>
   <section>
     <h2>Mebel</h2>
-    <label class="row"><span>Klapy otwarte</span><input type="checkbox" id="lidToggle"></label>
+    <label class="row"><span>Klapy i drzwiczki otwarte</span><input type="checkbox" id="lidToggle"></label>
   </section>
   <section>
     <h2>Wersja mebla</h2>
@@ -372,9 +372,16 @@ const LED = 1;                                  // ile listwa przednia wystaje p
 const DEFAULT_PANELS = [];                      // wersja domyślna: sam pokój, bez mebli (projekty są w folderze wersje/)
 // --- wersjonowanie: elementy mogą pochodzić z pliku JSON (zapamiętanego w localStorage) zamiast z listy powyżej ---
 const STORE_KEY = 'parapet.wersja.v1';
+// drzwiczki (pionowa płyta cienka w X): krawędź z zawiasami (front = większe z, back = mniejsze z)
+// i strona otwierania (right = +x, left = -x); wartość = znak kąta obrotu wokół osi Y
+const DOOR_SWING = { 'front-right': -1, 'front-left': 1, 'back-right': 1, 'back-left': -1 };
+const DOOR_PL = { 'front-right': 'zawiasy z przodu, otwierane w prawo', 'front-left': 'zawiasy z przodu, otwierane w lewo',
+  'back-right': 'zawiasy z tyłu, otwierane w prawo', 'back-left': 'zawiasy z tyłu, otwierane w lewo' };
 const validPanels = a => Array.isArray(a) && a.length > 0 && a.every(p => p && typeof p.name === 'string' &&
   Array.isArray(p.size) && p.size.length === 3 && Array.isArray(p.pos) && p.pos.length === 3 &&
-  [...p.size, ...p.pos].every(Number.isFinite) && p.size.every(v => v > 0));
+  [...p.size, ...p.pos].every(Number.isFinite) && p.size.every(v => v > 0) &&
+  (p.door === undefined || (DOOR_SWING[p.door] !== undefined && !p.lid && !p.notch && !p.mesh &&
+    p.size[0] <= p.size[1] && p.size[0] <= p.size[2])));   // drzwiczki: tylko pionowa płyta cienka w X
 let stored = null;
 try { stored = JSON.parse(localStorage.getItem(STORE_KEY)); } catch { /* brak lub uszkodzony zapis */ }
 if (!stored || !validPanels(stored.panels)) stored = null;
@@ -384,6 +391,7 @@ const versionName = stored ? (stored.name || 'bez nazwy') : null;   // null = we
 const panelMat = new THREE.MeshStandardMaterial({ color: 0xc89b5e, roughness: 0.7 });
 const panelEdge = new THREE.LineBasicMaterial({ color: 0x5a4020 });
 const lids = [];
+const doors = [];                               // { pivot, sign } – obrót wokół osi Y
 const panels = new THREE.Group();
 scene.add(panels);
 function perfMat(w, h) {                        // blacha perforowana: szara z przezroczystymi otworami
@@ -425,6 +433,16 @@ for (const p of PANELS) {
     for (const f of [0.12, 0.5, 0.88])          // zawiasy
       pipe([p.pos[0] + p.size[0] * f - 3, pivot.position.y, p.pos[2]],
            [p.pos[0] + p.size[0] * f + 3, pivot.position.y, p.pos[2]], 0.5, M.metal, panels);
+  } else if (p.door) {                          // drzwiczki: obrót wokół pionowej krawędzi z zawiasami
+    const [w, h, d] = p.size, [hinge, side] = p.door.split('-');
+    const px = side === 'right' ? p.pos[0] + w : p.pos[0], pz = hinge === 'front' ? p.pos[2] + d : p.pos[2];
+    const pivot = new THREE.Group();
+    pivot.position.set(px, 0, pz);
+    panels.add(pivot);
+    m = box(w, h, d, p.pos[0] - px, p.pos[1], p.pos[2] - pz, panelMat, pivot);
+    doors.push({ pivot, sign: DOOR_SWING[p.door] });
+    for (const f of [0.12, 0.88])               // zawiasy
+      pipe([px, p.pos[1] + h * f - 3, pz], [px, p.pos[1] + h * f + 3, pz], 0.5, M.metal, panels);
   } else if (p.mesh) {                          // pionowa blacha perforowana
     m = new THREE.Mesh(new THREE.PlaneGeometry(p.size[0], p.size[1]), perfMat(p.size[0], p.size[1]));
     m.position.set(p.pos[0] + p.size[0] / 2, p.pos[1] + p.size[1] / 2, p.pos[2] + p.size[2] / 2);
@@ -435,7 +453,8 @@ for (const p of PANELS) {
 }
 { // lista płyt do zamówienia (mm): dwa większe wymiary to format, najmniejszy to grubość
   const mm = v => Math.round(v * 10);
-  const note = p => p.note || (p.notch ? `wycięcie ${mm(p.notch[0])} × ${mm(p.notch[1])} na parapet` : '');
+  const note = p => p.note || (p.notch ? `wycięcie ${mm(p.notch[0])} × ${mm(p.notch[1])} na parapet` :
+    p.door ? `drzwiczki: ${DOOR_PL[p.door]}` : '');
   const rowsHtml = PANELS.map((p, i) => {
     const d = [...p.size].sort((a, b) => b - a);
     return `<tr data-i="${i}"><td>${i + 1}</td><td>${p.name}</td><td>${mm(d[0])} × ${mm(d[1])}</td><td>${mm(d[2])}</td><td>${note(p) ? `<span class="warn" data-tip="${note(p)}">⚠</span>` : ''}</td></tr>`;
@@ -663,7 +682,7 @@ document.querySelectorAll('#views .seg').forEach(seg => seg.querySelectorAll('bu
       notes: stored && stored.notes ? stored.notes : '',   // opis złożenia (Markdown), trafia do eksportu .md
       panels: PANELS.map(p => {
         const o = { name: p.name, size: p.size.map(r2), pos: p.pos.map(r2) };
-        for (const k of ['mesh', 'lid', 'note', 'notch']) if (p[k] !== undefined) o[k] = p[k];
+        for (const k of ['mesh', 'lid', 'door', 'note', 'notch']) if (p[k] !== undefined) o[k] = p[k];
         return o;
       }),
     };
@@ -695,7 +714,10 @@ document.querySelectorAll('#views .seg').forEach(seg => seg.querySelectorAll('bu
 const lidToggle = document.getElementById('lidToggle');
 renderer.setAnimationLoop(() => {
   const target = lidToggle.checked ? -THREE.MathUtils.degToRad(85) : 0;
-  for (const l of lids) l.rotation.x += (target - l.rotation.x) * 0.12; controls.update(); renderer.render(scene, camera); labelRenderer.render(scene, camera); });
+  for (const l of lids) l.rotation.x += (target - l.rotation.x) * 0.12;
+  const open = lidToggle.checked ? THREE.MathUtils.degToRad(85) : 0;
+  for (const { pivot, sign } of doors) pivot.rotation.y += (sign * open - pivot.rotation.y) * 0.12;
+  controls.update(); renderer.render(scene, camera); labelRenderer.render(scene, camera); });
 </script>
 </body>
 </html>

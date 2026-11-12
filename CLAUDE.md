@@ -93,7 +93,8 @@ array, and every panel has a string `name`, a 3-number `size` with all values > 
 | `size` | yes | `[x, y, z]` in cm. The smallest value is the thickness; the other two are the cut format |
 | `pos` | yes | `[x, y, z]` of the min corner in cm |
 | `mesh` | no | `true` = 1 mm perforated sheet metal instead of board. Use thickness `0.1` |
-| `lid` | no | `true` = hinged flap. Must be horizontal (thin in y). Pivots about its rear top edge (min z, max y) and swings up toward the wall when **Klapy otwarte** is ticked. Three hinges are drawn automatically |
+| `lid` | no | `true` = hinged flap. Must be horizontal (thin in y). Pivots about its rear top edge (min z, max y) and swings up toward the wall when **Klapy i drzwiczki otwarte** is ticked. Three hinges are drawn automatically |
+| `door` | no | Side door on a vertical panel thin in **x** (not with `lid`, `mesh` or `notch`). Value `"front-right"`, `"front-left"`, `"back-right"` or `"back-left"`: hinge edge (`front` = max z, `back` = min z) and the side it swings to (`right` = +x). Two hinges are drawn; swings 85° with **Klapy i drzwiczki otwarte** |
 | `note` | no | Short Polish remark. Shown as a ⚠ tooltip in the parts list and in the `.md` export |
 | `notch` | no | `[z depth, y height]` rectangular cut-out at the top rear corner. Only for vertical side panels (thin in x) |
 
@@ -155,7 +156,7 @@ Rewrite the notes whenever the panels change; stale assembly steps are worse tha
    it has a matching `notch`.
 4. Rewrite `notes` for the new design.
 5. Load the file in the viewer and look at it from the front, the side and with **Pokój: szkielet**.
-   Tick **Klapy otwarte** if there are lids. Check the browser console for errors.
+   Tick **Klapy i drzwiczki otwarte** if there are lids. Check the browser console for errors.
 6. Tell the owner the file path and list the cut sizes in mm. State every assumption you made.
 
 ## Construction rules agreed with the owner

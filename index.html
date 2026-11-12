@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parapet – model 3D</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #dfe6ec; font-family: system-ui, sans-serif; }
+  .card { position: fixed; z-index: 10; background: rgba(255,255,255,.94); color: #223; border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.15); font-size: 13px; line-height: 1.5; }
+  /* panel sterowania */
+  #views { top: 12px; left: 12px; width: 250px; padding: 12px 14px; max-height: calc(100vh - 52px); overflow: auto; }
+  #views section + section { margin-top: 10px; padding-top: 10px; border-top: 1px solid #e3e7ec; }
+  #views h2 { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #7a8594; margin: 0 0 6px; }
+  #views button { border: 0; border-radius: 6px; background: #eef1f5; color: #223; cursor: pointer; font: inherit; padding: 6px 4px; }
+  #views button:hover { background: #dfe6f3; }
+  #views .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  #views .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+  #views .row:first-of-type { margin-top: 0; }
+  #views .seg { display: flex; background: #eef1f5; border-radius: 6px; padding: 2px; }
+  #views .seg button { background: transparent; padding: 3px 8px; font-size: 12px; color: #556; }
+  #views .seg button.act { background: #2f5fb3; color: #fff; }
+  #views label.row { cursor: pointer; user-select: none; }
+  #views input[type=checkbox] { width: 16px; height: 16px; margin: 0; accent-color: #2f5fb3; }
+  #views input[type=text] { width: 100%; box-sizing: border-box; margin-top: 6px; padding: 5px 8px; font: inherit;
+    border: 1px solid #cfd6de; border-radius: 6px; }
+  #verName { font-weight: 600; }
+  #views input[type=text]:disabled { background: #f3f5f8; }
+  #views button:disabled { opacity: .45; cursor: default; background: #eef1f5; }
+  #verMsg { margin-top: 6px; }
+  #verMsg.err { color: #b3261e; }
+  #views .unit { color: #7a8594; font-size: 12px; }
+  #views .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; }
+  #views .hint { color: #7a8594; font-size: 12px; }
+  #views summary { cursor: pointer; font-weight: 600; }
+  #info table { border-collapse: collapse; margin-top: 4px; width: 100%; font-size: 12px; }
+  #info td { padding: 0 6px 0 0; }
+  #info td:last-child { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-right: 0; }
+  /* lista elementów */
+  #cut { top: 12px; right: 12px; padding: 10px 14px; max-height: calc(100vh - 48px); overflow: auto; }
+  #cut summary { font-size: 14px; font-weight: 600; cursor: pointer; }
+  #cut details[open] summary { margin-bottom: 4px; }
+  #cut table { border-collapse: collapse; }
+  #cut th { text-align: left; font-weight: 600; color: #667; font-size: 12px; padding: 0 10px 2px 0; }
+  #cut td { padding: 0 10px 0 0; font-variant-numeric: tabular-nums; }
+  #cut td:last-child, #cut th:last-child { padding-right: 0; }
+  #cut tr[data-i]:hover { background: #ffe9c4; }
+  #cut button { margin-top: 10px; width: 100%; border: 0; border-radius: 6px; background: #2f5fb3; color: #fff;
+    font: inherit; font-weight: 600; padding: 7px; cursor: pointer; }
+  #cut button:hover { background: #254c91; }
+  #cut .warn { color: #c77700; cursor: help; font-size: 14px; }
+  #tip { position: fixed; z-index: 20; display: none; max-width: 240px; background: #223; color: #fff;
+    padding: 6px 9px; border-radius: 6px; font-size: 12px; line-height: 1.4; pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  /* etykiety wymiarów */
+  .dim { background: #fff; color: #b3261e; border: 1px solid #b3261e; border-radius: 4px; padding: 0 4px;
+    font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .dim.furn { color: #1a56b0; border-color: #1a56b0; }
+  #labels { position: fixed; inset: 0; pointer-events: none; }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="cut" class="card"></div>
+<div id="tip"></div>
+<div id="views" class="card">
+  <section>
+    <h2>Widok</h2>
+    <div class="grid">
+      <button data-v="persp">Perspektywa</button>
+      <button data-v="front">Z przodu</button>
+      <button data-v="top">Z góry</button>
+      <button data-v="side">Z boku</button>
+    </div>
+  </section>
+  <section>
+    <h2>Widoczność</h2>
+    <div class="row"><span>Pokój</span>
+      <span class="seg" data-g="room"><button data-m="on" class="act">pełny</button><button data-m="ghost">szkielet</button><button data-m="off">ukryty</button></span></div>
+    <div class="row"><span>Meble</span>
+      <span class="seg" data-g="panels"><button data-m="on" class="act">pełne</button><button data-m="ghost">szkielet</button><button data-m="off">ukryte</button></span></div>
+  </section>
+  <section>
+    <h2>Wymiary na rysunku</h2>
+    <label class="row"><span><i class="sw" style="background:#b3261e"></i>Pokój <span class="unit">[cm]</span></span><input type="checkbox" id="dimsToggle"></label>
+    <label class="row"><span><i class="sw" style="background:#1a56b0"></i>Mebel <span class="unit">[mm]</span></span><input type="checkbox" id="furnToggle"></label>
+  </section>
+  <section>
+    <h2>Mebel</h2>
+    <label class="row"><span>Klapy otwarte</span><input type="checkbox" id="lidToggle"></label>
+  </section>
+  <section>
+    <h2>Wersja mebla</h2>
+    <div class="row"><span id="verName"></span></div>
+    <input type="text" id="verInput" placeholder="nazwa wersji do zapisu">
+    <div class="grid" style="margin-top:6px">
+      <button id="verSave">Zapisz do pliku</button>
+      <button id="verLoad">Wczytaj z pliku</button>
+    </div>
+    <button id="verReset" style="width:100%;margin-top:6px">Wyczyść wczytany plik</button>
+    <input type="file" id="verFile" accept=".json,application/json" hidden>
+    <div id="verMsg" class="hint"></div>
+  </section>
+  <section>
+    <details id="info"></details>
+  </section>
+  <section class="hint">Mysz: obrót (lewy przycisk), przesuwanie (prawy), zoom (kółko)</section>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// =====================================================================
+//  WYMIARY (cm) — na razie SZACOWANE ze zdjęcia, do podmiany na dokładne
+//  Układ: x = od lewej ściany w prawo, y = od podłogi w górę,
+//         z = od ściany z oknem w głąb pokoju
+// =====================================================================
+const R = {
+  roomW: 210,        // szerokość pokoju (ściana z oknem)
+  roomH: 250,        // wysokość pokoju
+  roomD: 180,        // ile głębokości pokoju pokazujemy
+  wallT: 30,         // grubość ściany zewnętrznej
+
+  winLeft: 3,        // lewa krawędź okna od lewej ściany
+  winW: 204,         // szerokość otworu okiennego
+  winH: 138,         // wysokość otworu okiennego
+  winRecess: 2,      // cofnięcie ramy okna względem lica ściany
+  winSplit: 0.43,    // udział lewego skrzydła w szerokości
+
+  winGap: 1.7,       // szczelina między parapetem a oknem (przyjęta jako pionowa)
+
+  sillH: 104.5,         // wysokość górnej powierzchni parapetu od podłogi
+  sillT: 4,          // grubość parapetu
+  sillOut: 7,        // wysunięcie parapetu przed lico ściany
+  sillOver: 2,       // wystawanie parapetu na boki poza otwór
+
+  radValve: 10,      // SZAC. miejsce na zawór z gałką po lewej (gałka zaczyna się 19 od ściany)
+  radLeft: 29,       // lewa krawędź kaloryfera od lewej ściany
+  radRibs: 7,        // liczba żeberek
+  radRibPitch: 48 / 7,  // rozstaw żeberek
+  radBottom: 10,     // dół kaloryfera nad podłogą
+  radH: 59,          // wysokość kaloryfera
+  radD: 14,          // głębokość kaloryfera
+  radGap: 5,         // odstęp kaloryfera od ściany
+
+  // --- rury (rzut z góry wg szkicu) ---
+  pipeR: 1.5,        // piony: średnica 3 cm
+  pipeX: 5,          // oś pionów od lewej ściany (3,5 odstępu + promień)
+  pipeAZ: 49.5,      // pion A (bliżej okna): zajmuje 48–51 cm od rogu
+  pipeBZ: 54.5,      // pion B (dalej od okna): zajmuje 53–56 cm od rogu
+  branchR: 1.1,      // SZAC. promień gałązek
+  supY: 64.5,        // wysokość osi górnej gałązki
+  retY: 14,          // wysokość osi dolnej gałązki
+  supOut: 7,         // górna gałązka: ile odstaje od lewej ściany na głębokości końca kaloryfera
+  retOut: 11,        // dolna gałązka: jw.
+  retBulge: 12,      // dolna gałązka: maks. odstawanie przy omijaniu pionu A (3,5 + 3 + 5,5)
+};
+
+const info = document.getElementById('info');
+const rows = [
+  ['Szerokość pokoju', R.roomW], ['Wysokość pokoju', R.roomH],
+  ['Parapet – spód / góra', `${R.sillH - R.sillT} / ${R.sillH}`],
+  ['Parapet – wysunięcie od ściany', R.sillOut],
+  ['Parapet – głębokość (od okna)', R.sillOut + R.winRecess],
+  ['Kaloryfer z gałką: od lewej ściany', R.radLeft - R.radValve],
+  ['Kaloryfer z gałką: szerokość', (R.radValve + R.radRibs * R.radRibPitch).toFixed(0)],
+  ['Kaloryfer – góra', R.radBottom + R.radH],
+  ['Kaloryfer – dół (szac.)', R.radBottom],
+  ['Kaloryfer – głęb. od ściany', R.radGap + R.radD],
+  ['Piony: od lewej ściany (odstęp)', R.pipeX - R.pipeR],
+  ['Piony: od rogu', `${R.pipeAZ - R.pipeR}–${R.pipeBZ + R.pipeR}`],
+  ['Gałązki: wysokość osi', `${R.retY} / ${R.supY}`],
+  ['Gałązki: odstają od lewej ściany', `${R.retOut} / ${R.supOut}`],
+];
+info.innerHTML = '<summary>Tabela wymiarów pokoju [cm]</summary><table>' +
+  rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('') + '</table>';
+
+// ---------- scena ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xdfe6ec);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 1, 5000);
+const controls = new OrbitControls(camera, renderer.domElement);
+
+const VIEWS = {
+  persp: [[R.roomW * 0.8, 200, 470], [R.roomW / 2, 115, 0]],
+  front: [[R.roomW / 2, 90, 420],     [R.roomW / 2, 90, 0]],
+  top:   [[R.roomW / 2, 520, 60.01],  [R.roomW / 2, 0, 60]],
+  side:  [[R.roomW + 380, 90, 60],    [R.roomW / 2, 90, 60]],
+};
+function setView(name) {
+  const [p, t] = VIEWS[name];
+  camera.position.set(...p); controls.target.set(...t); controls.update();
+}
+setView('persp');
+document.querySelectorAll('#views button[data-v]').forEach(b => b.onclick = () => setView(b.dataset.v));
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0xd8d2c8, 2.4));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(R.roomW * 0.8, 320, 300);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -300, right: 300, top: 300, bottom: -300, near: 10, far: 900 });
+scene.add(sun);
+
+// ---------- materiały ----------
+const M = {
+  wall:  new THREE.MeshStandardMaterial({ color: 0xf3ecdc, roughness: 0.95 }),
+  floor: new THREE.MeshStandardMaterial({ color: 0xdfc8a4, roughness: 0.9 }),
+  white: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }),
+  rad:   new THREE.MeshStandardMaterial({ color: 0xf4f2ec, roughness: 0.45 }),
+  pipe:  new THREE.MeshStandardMaterial({ color: 0xf2f0ea, roughness: 0.4 }),
+  glass: new THREE.MeshStandardMaterial({ color: 0x9fd0f5, transparent: true, opacity: 0.45, roughness: 0.1 }),
+  metal: new THREE.MeshStandardMaterial({ color: 0xb8b8b8, roughness: 0.4, metalness: 0.6 }),
+};
+
+const room = new THREE.Group();
+scene.add(room);
+
+function box(w, h, d, x, y, z, mat, parent = room) {      // x,y,z = narożnik min
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x + w / 2, y + h / 2, z + d / 2);
+  m.castShadow = m.receiveShadow = true;
+  parent.add(m); return m;
+}
+function pipe(a, b, r, mat = M.pipe, parent = room) {      // walec między punktami a i b
+  const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
+  const dir = vb.clone().sub(va);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, dir.length(), 20), mat);
+  m.position.copy(va).addScaledVector(dir, 0.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+  m.castShadow = m.receiveShadow = true;
+  parent.add(m); return m;
+}
+function elbow(p, r, mat = M.pipe) {                        // kulka na kolanku
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), mat);
+  m.position.set(...p); m.castShadow = true; room.add(m);
+}
+
+// ---------- podłoga i ściany ----------
+{
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(R.roomW, R.roomD), M.floor);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(R.roomW / 2, 0, R.roomD / 2);
+  floor.receiveShadow = true;
+  room.add(floor);
+
+  // ściany boczne — widoczne tylko od środka, żeby nie zasłaniały widoku z zewnątrz
+  const sideGeo = new THREE.PlaneGeometry(R.roomD, R.roomH);
+  const left = new THREE.Mesh(sideGeo, M.wall);
+  left.rotation.y = Math.PI / 2; left.position.set(0, R.roomH / 2, R.roomD / 2);
+  const right = new THREE.Mesh(sideGeo, M.wall);
+  right.rotation.y = -Math.PI / 2; right.position.set(R.roomW, R.roomH / 2, R.roomD / 2);
+  left.receiveShadow = right.receiveShadow = true;
+  room.add(left, right);
+
+  // ściana z oknem — z otworem
+  const s = new THREE.Shape();
+  s.moveTo(0, 0); s.lineTo(R.roomW, 0); s.lineTo(R.roomW, R.roomH); s.lineTo(0, R.roomH); s.closePath();
+  const h = new THREE.Path();
+  const x0 = R.winLeft, x1 = R.winLeft + R.winW, y0 = R.sillH + R.winGap, y1 = y0 + R.winH;
+  h.moveTo(x0, y0); h.lineTo(x0, y1); h.lineTo(x1, y1); h.lineTo(x1, y0); h.closePath();
+  s.holes.push(h);
+  const wall = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: R.wallT, bevelEnabled: false }), M.wall);
+  wall.position.z = -R.wallT;
+  wall.receiveShadow = true;
+  room.add(wall);
+}
+
+// ---------- okno ----------
+{
+  const fz = -R.winRecess - 7, fd = 7;          // rama: głębokość 7 cm
+  const x0 = R.winLeft, y0 = R.sillH + R.winGap, W = R.winW, H = R.winH;
+  const frame = (x, y, w, h, t, z, d) => {       // ramka prostokątna z 4 listew
+    box(w, t, d, x, y, z, M.white); box(w, t, d, x, y + h - t, z, M.white);
+    box(t, h - 2 * t, d, x, y + t, z, M.white); box(t, h - 2 * t, d, x + w - t, y + t, z, M.white);
+  };
+  frame(x0, y0, W, H, 5, fz, fd);                // ościeżnica
+  const split = x0 + W * R.winSplit;
+  box(6, H - 10, fd, split - 3, y0 + 5, fz, M.white);   // słupek
+  const sash = (x, w) => {                       // skrzydło
+    frame(x, y0 + 4, w, H - 8, 6, fz + 2, fd);
+    box(w - 12, H - 20, 1, x + 6, y0 + 10, fz + 5, M.glass).castShadow = false;
+  };
+  sash(x0 + 4, split - 2 - (x0 + 4));
+  sash(split + 2, x0 + W - 4 - (split + 2));
+  box(1.5, 12, 3, split - 6, y0 + H / 2 - 6, fz + fd + 2, M.metal);  // klamka
+
+  // parapet wewnętrzny
+  box(W + 2 * R.sillOver, R.sillT, R.winRecess + R.sillOut,
+      Math.max(0, x0 - R.sillOver), R.sillH - R.sillT, -R.winRecess, M.white)
+    .scale.x = Math.min(1, (R.roomW - Math.max(0, x0 - R.sillOver)) / (W + 2 * R.sillOver));
+}
+
+// ---------- kaloryfer żeliwny ----------
+const radW = R.radRibs * R.radRibPitch;
+const radTop = R.radBottom + R.radH;
+const radZ = R.radGap + R.radD / 2;               // oś kaloryfera
+{
+  for (let i = 0; i < R.radRibs; i++) {
+    const x = R.radLeft + i * R.radRibPitch + 0.75;
+    const w = R.radRibPitch - 1.5;
+    // żeberko: dwie kolumny + zaokrąglone góra/dół
+    for (const dz of [-R.radD / 2 + 2.5, R.radD / 2 - 2.5])
+      pipe([x + w / 2, R.radBottom + 3, radZ + dz], [x + w / 2, radTop - 3, radZ + dz], w / 2, M.rad);
+    box(w, 6, R.radD - 3, x, R.radBottom, R.radGap + 1.5, M.rad);
+    box(w, 6, R.radD - 3, x, radTop - 6, R.radGap + 1.5, M.rad);
+  }
+  // kolektory poziome (góra i dół)
+  pipe([R.radLeft, R.retY, radZ], [R.radLeft + radW, R.retY, radZ], 2.6, M.rad);
+  pipe([R.radLeft, R.supY, radZ], [R.radLeft + radW, R.supY, radZ], 2.6, M.rad);
+  // nóżki
+  for (const x of [R.radLeft + R.radRibPitch * 1.5, R.radLeft + radW - R.radRibPitch * 1.5])
+    pipe([x, 0, radZ], [x, R.radBottom + 1, radZ], 0.8, M.metal);
+}
+
+// ---------- rury pionowe + gałązki do kaloryfera ----------
+function tube(points, r, mat = M.pipe) {                    // gładka rura przez punkty
+  const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)), false, 'centripetal');
+  const m = new THREE.Mesh(new THREE.TubeGeometry(curve, 120, r, 16, false), mat);
+  m.castShadow = m.receiveShadow = true;
+  room.add(m); return m;
+}
+{
+  const br = R.branchR, x = R.pipeX;
+  // piony od podłogi do sufitu, przy lewej ścianie
+  pipe([x, 0, R.pipeAZ], [x, R.roomH, R.pipeAZ], R.pipeR);
+  pipe([x, 0, R.pipeBZ], [x, R.roomH, R.pipeBZ], R.pipeR);
+
+  // górna gałązka: z pionu A wzdłuż lewej ściany w stronę okna, potem w prawo do zaworu
+  const valveX = R.radLeft - R.radValve;                    // tu zaczyna się zawór (19 cm)
+  const sx = R.supOut - br, y1 = R.supY;                    // oś gałązki na głębokości końca kaloryfera
+  const radEnd = R.radGap + R.radD;
+  tube([[x, y1, R.pipeAZ], [x + 0.3, y1, R.pipeAZ - 8], [sx, y1, radEnd + 6], [sx, y1, radEnd],
+        [sx + 1, y1, radZ + 3], [sx + 4, y1, radZ], [valveX + 1, y1, radZ]], br);
+  // zawór z gałką
+  pipe([valveX, y1, radZ], [R.radLeft, y1, radZ], 2.2, M.metal);
+  pipe([valveX + 5, y1, radZ], [valveX + 5, y1, radZ + 7], 2.3, M.white);
+
+  // dolna gałązka: z pionu B, omija pion A łukiem, biegnie do okna i skręca do dołu kaloryfera
+  const rx = R.retOut - br, bx = R.retBulge - br, y2 = R.retY;
+  tube([[x, y2, R.pipeBZ], [x + 3, y2, R.pipeBZ - 0.5], [bx - 1, y2, R.pipeBZ - 4], [bx, y2, R.pipeAZ - 3],
+        [rx, y2, radEnd + 8], [rx, y2, radEnd], [rx + 1, y2, radZ + 3], [rx + 4, y2, radZ],
+        [R.radLeft, y2, radZ]], br);
+
+  // uchwyty pionów do ściany
+  const by = R.roomH * 0.56;
+  for (const z of [R.pipeAZ, R.pipeBZ]) pipe([0, by, z], [x, by, z], 0.6, M.metal);
+}
+
+// =====================================================================
+//  PŁYTY MEBLOWE — size = [szer. X, wys. Y, głęb. Z] w cm, pos = narożnik
+//  (lewy, dolny, najbliższy ścianie z oknem)
+// =====================================================================
+const T = 1.8;                                  // grubość płyty 18 mm
+const DEPTH = 25 - R.winRecess;                // głębokość zabudowy od ściany pod oknem (23 cm)
+const SILL_B = R.sillH - R.sillT;               // spód parapetu (100,5)
+const LED = 1;                                  // ile listwa przednia wystaje poniżej płyty spodniej (osłona LED)
+const DEFAULT_PANELS = [];                      // wersja domyślna: sam pokój, bez mebli (projekty są w folderze wersje/)
+// --- wersjonowanie: elementy mogą pochodzić z pliku JSON (zapamiętanego w localStorage) zamiast z listy powyżej ---
+const STORE_KEY = 'parapet.wersja.v1';
+const validPanels = a => Array.isArray(a) && a.length > 0 && a.every(p => p && typeof p.name === 'string' &&
+  Array.isArray(p.size) && p.size.length === 3 && Array.isArray(p.pos) && p.pos.length === 3 &&
+  [...p.size, ...p.pos].every(Number.isFinite) && p.size.every(v => v > 0));
+let stored = null;
+try { stored = JSON.parse(localStorage.getItem(STORE_KEY)); } catch { /* brak lub uszkodzony zapis */ }
+if (!stored || !validPanels(stored.panels)) stored = null;
+const PANELS = stored ? stored.panels : DEFAULT_PANELS;
+const versionName = stored ? (stored.name || 'bez nazwy') : null;   // null = wersja domyślna z index.html
+
+const panelMat = new THREE.MeshStandardMaterial({ color: 0xc89b5e, roughness: 0.7 });
+const panelEdge = new THREE.LineBasicMaterial({ color: 0x5a4020 });
+const lids = [];
+const panels = new THREE.Group();
+scene.add(panels);
+function perfMat(w, h) {                        // blacha perforowana: szara z przezroczystymi otworami
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d');
+  g.fillStyle = '#c9ccd0'; g.fillRect(0, 0, 64, 64);
+  g.globalCompositeOperation = 'destination-out';
+  g.beginPath(); g.arc(32, 32, 20, 0, Math.PI * 2); g.fill();
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(w / 1.2, h / 1.2);             // podziałka otworów powiększona dla czytelności
+  tex.anisotropy = 8;
+  return new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.3,
+    side: THREE.DoubleSide, metalness: 0.5, roughness: 0.5 });
+}
+for (const p of PANELS) {
+  let m;
+  if (p.notch) {                                // płyta pionowa (bok) z wycięciem: profil w płaszczyźnie Z-Y
+    const [w, h, d] = p.size, [nz, ny] = p.notch;
+    const sh = new THREE.Shape();
+    sh.moveTo(0, 0); sh.lineTo(d, 0); sh.lineTo(d, h); sh.lineTo(nz, h); sh.lineTo(nz, h - ny);
+    sh.lineTo(0, h - ny); sh.closePath();
+    m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: w, bevelEnabled: false }), panelMat);
+    m.rotation.y = -Math.PI / 2;
+    m.position.set(p.pos[0] + w, p.pos[1], p.pos[2]);
+    m.castShadow = m.receiveShadow = true;
+    panels.add(m);
+  } else if (p.lid) {                           // klapa: obrót wokół tylnej górnej krawędzi
+    const pivot = new THREE.Group();
+    pivot.position.set(0, p.pos[1] + p.size[1], p.pos[2]);
+    panels.add(pivot);
+    if (p.mesh) {
+      m = new THREE.Mesh(new THREE.PlaneGeometry(p.size[0], p.size[2]), perfMat(p.size[0], p.size[2]));
+      m.rotation.x = -Math.PI / 2;
+      m.position.set(p.pos[0] + p.size[0] / 2, -p.size[1] / 2, p.size[2] / 2);
+      pivot.add(m);
+    } else m = box(...p.size, p.pos[0], -p.size[1], 0, panelMat, pivot);
+    lids.push(pivot);
+    for (const f of [0.12, 0.5, 0.88])          // zawiasy
+      pipe([p.pos[0] + p.size[0] * f - 3, pivot.position.y, p.pos[2]],
+           [p.pos[0] + p.size[0] * f + 3, pivot.position.y, p.pos[2]], 0.5, M.metal, panels);
+  } else if (p.mesh) {                          // pionowa blacha perforowana
+    m = new THREE.Mesh(new THREE.PlaneGeometry(p.size[0], p.size[1]), perfMat(p.size[0], p.size[1]));
+    m.position.set(p.pos[0] + p.size[0] / 2, p.pos[1] + p.size[1] / 2, p.pos[2] + p.size[2] / 2);
+    panels.add(m);
+  } else m = box(...p.size, ...p.pos, p.color ? new THREE.MeshStandardMaterial({ color: p.color, roughness: 0.7 }) : panelMat, panels);
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), panelEdge));
+  p.mesh3d = m;
+}
+{ // lista płyt do zamówienia (mm): dwa większe wymiary to format, najmniejszy to grubość
+  const mm = v => Math.round(v * 10);
+  const note = p => p.note || (p.notch ? `wycięcie ${mm(p.notch[0])} × ${mm(p.notch[1])} na parapet` : '');
+  const rowsHtml = PANELS.map((p, i) => {
+    const d = [...p.size].sort((a, b) => b - a);
+    return `<tr data-i="${i}"><td>${i + 1}</td><td>${p.name}</td><td>${mm(d[0])} × ${mm(d[1])}</td><td>${mm(d[2])}</td><td>${note(p) ? `<span class="warn" data-tip="${note(p)}">⚠</span>` : ''}</td></tr>`;
+  }).join('');
+  document.getElementById('cut').innerHTML = `<details><summary>Lista elementów [mm] (${PANELS.length})</summary><table>` +
+    '<tr><th>#</th><th>Element</th><th>Format</th><th>Grub.</th><th></th></tr>' + rowsHtml + '</table><button id="exportMd">Eksport do .md</button></details>';
+
+  // eksport listy elementów i opisu złożenia do pliku Markdown
+  document.getElementById('exportMd').onclick = () => {
+    const boards = PANELS.filter(p => !p.mesh), sheets = PANELS.filter(p => p.mesh);
+    const row = (p, i) => {
+      const d = [...p.size].sort((a, b) => b - a);
+      return `| ${i + 1} | ${p.name} | ${mm(d[0])} × ${mm(d[1])} | ${mm(p.pos[0])} | ${mm(p.pos[1])} | ${mm(p.pos[2])} | ${note(p) || ''} |`;
+    };
+    const head = '| # | Element | Format [mm] | Od lewej ściany | Od podłogi | Od ściany pod oknem | Uwagi |\n|---|---|---|---|---|---|---|';
+    const sillB = mm(SILL_B), sillT = mm(R.sillH);
+    const md = `# Zabudowa parapetu z maskownicą kaloryfera
+
+Wygenerowano z modelu 3D. Wersja: ${versionName || 'domyślna'}. Wszystkie wymiary w milimetrach.
+
+## Pomieszczenie
+
+- Szerokość wnęki (ściana z oknem): ${mm(R.roomW)}
+- Parapet: spód na ${sillB}, góra na ${sillT}, wysunięty ${mm(R.sillOut)} przed ścianę pod oknem
+- Kaloryfer: od ${mm(R.radLeft - R.radValve)} do ${mm(R.radLeft + R.radRibs * R.radRibPitch)} od lewej ściany, góra na ${mm(R.radBottom + R.radH)}, odstaje ${mm(R.radGap + R.radD)} od ściany
+- Gałązki kaloryfera biegną wzdłuż lewej ściany na wysokości ${mm(R.retY)} i ${mm(R.supY)} (osie)
+
+## Płyta meblowa 18 mm (${boards.length} szt.)
+
+Kolumny położenia podają lewy dolny tylny narożnik elementu. Wartość ujemna w ostatniej kolumnie oznacza, że element wchodzi we wnękę okna (okno jest cofnięte 20 względem ściany pod parapetem).
+
+${head}
+${boards.map(row).join('\n')}
+
+## Blacha perforowana 1 mm (${sheets.length} szt.)
+
+${head}
+${sheets.map(row).join('\n')}
+
+${stored && stored.notes ? stored.notes : ''}`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown;charset=utf-8' }));
+    a.download = 'zabudowa-parapetu.md';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+}
+
+// podpowiedź po najechaniu na ikonę ostrzeżenia w liście elementów
+{
+  const tip = document.getElementById('tip'), cut = document.getElementById('cut');
+  cut.addEventListener('mouseover', e => {
+    const w = e.target.closest('.warn'); if (!w) return;
+    tip.textContent = w.dataset.tip; tip.style.display = 'block';
+    const r = w.getBoundingClientRect();
+    tip.style.top = (r.bottom + 6) + 'px';
+    tip.style.left = Math.max(8, r.right - tip.offsetWidth) + 'px';
+  });
+  cut.addEventListener('mouseout', e => { if (e.target.closest('.warn')) tip.style.display = 'none'; });
+}
+
+// ---------- wymiary ----------
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(innerWidth, innerHeight);
+labelRenderer.domElement.id = 'labels';
+document.body.appendChild(labelRenderer.domElement);
+
+const dims = new THREE.Group();
+scene.add(dims);
+const dimMat = new THREE.LineBasicMaterial({ color: 0xb3261e, depthTest: false, transparent: true });
+const fmt = v => String(Math.round(v * 10) / 10).replace('.', ',');
+// wymiar między punktami a i b; off = odsunięcie linii wymiarowej (rysuje też linie pomocnicze)
+function dim(a, b, off = [0, 0, 0], opt = {}) {
+  const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b), o = new THREE.Vector3(...off);
+  const pa = va.clone().add(o), pb = vb.clone().add(o);
+  const dir = pb.clone().sub(pa).normalize();
+  // znaczniki końców: krótka kreska prostopadła
+  let perp = new THREE.Vector3(0, 1, 0).cross(dir);
+  if (perp.lengthSq() < 0.01) perp = new THREE.Vector3(1, 0, 0).cross(dir);
+  perp.normalize().multiplyScalar(1.5);
+  const pts = [pa, pb, va, pa, vb, pb,
+    pa.clone().add(perp), pa.clone().sub(perp), pb.clone().add(perp), pb.clone().sub(perp)];
+  const line = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), opt.mat || dimMat);
+  line.renderOrder = 10;
+  (opt.group || dims).add(line);
+  const el = document.createElement('div');
+  el.className = opt.cls || 'dim'; el.textContent = fmt(va.distanceTo(vb) * (opt.scale || 1));
+  const lab = new CSS2DObject(el);
+  lab.position.lerpVectors(pa, pb, opt.t ?? 0.5);
+  (opt.group || dims).add(lab);
+}
+{
+  const W = R.roomW, H = R.roomH, D = R.roomD;
+  const radEnd = R.radGap + R.radD, vx = R.radLeft - R.radValve, rr = R.radLeft + radW;
+  // pokój
+  dim([0, 0, D], [W, 0, D], [0, 0, 6]);
+  dim([W, 0, D], [W, H, D], [0, 0, 6]);
+  // parapet
+  const sb = R.sillH - R.sillT;
+  dim([150, 0, R.sillOut], [150, sb, R.sillOut]);                      // spód parapetu od podłogi
+  dim([W - 25, sb, R.sillOut], [W - 25, R.sillH, R.sillOut], [0, 0, 4]); // grubość
+  dim([120, sb, 0], [120, sb, R.sillOut], [0, -3, 0]);                 // wysunięcie od ściany (dół)
+  dim([95, R.sillH, -R.winRecess], [95, R.sillH, R.sillOut], [0, 3, 0]); // głębokość od okna (góra)
+  // kaloryfer
+  dim([0, radTop, radEnd], [vx, radTop, radEnd], [0, 10, 0]);          // od lewej ściany do gałki
+  dim([vx, radTop, radEnd], [rr, radTop, radEnd], [0, 10, 0]);         // szerokość z gałką
+  dim([rr, 0, radEnd], [rr, radTop, radEnd], [10, 0, 0]);              // góra
+  dim([rr, 0, radEnd], [rr, R.radBottom, radEnd], [3, 0, 0]);          // dół
+  dim([rr, radTop, 0], [rr, radTop, radEnd], [5, 0, 0]);               // głębokość od ściany
+  // piony
+  const x = R.pipeX, r = R.pipeR;
+  dim([0, 110, R.pipeAZ], [x - r, 110, R.pipeAZ]);                     // odstęp od lewej ściany
+  dim([x - r, 122, R.pipeAZ], [x + r, 122, R.pipeAZ]);                 // średnica
+  dim([x + r, 135, 0], [x + r, 135, R.pipeAZ - r]);                    // od rogu do początku pionów
+  dim([x + r, 150, 0], [x + r, 150, R.pipeBZ + r]);                    // od rogu do końca pionów
+  // gałązki
+  dim([R.supOut, 0, radEnd], [R.supOut, R.supY, radEnd], [0, 0, 12]);  // wysokość osi górnej
+  dim([R.retOut, 0, radEnd], [R.retOut, R.retY, radEnd], [0, 0, 5]);   // wysokość osi dolnej
+  dim([0, R.supY, radEnd], [R.supOut, R.supY, radEnd], [0, 5, 0]);     // górna: odstawanie od ściany
+  dim([0, R.retY, radEnd], [R.retOut, R.retY, radEnd], [0, 5, 0]);     // dolna: odstawanie od ściany
+  dim([0, R.retY, R.pipeAZ - 3], [R.retBulge, R.retY, R.pipeAZ - 3], [0, 8, 0]); // dolna: łuk
+}
+// wymiary mebla [mm]: dla każdego elementu dwa większe wymiary wzdłuż jego przednich/górnych krawędzi
+const furnDims = new THREE.Group();
+scene.add(furnDims);
+{
+  const fo = { group: furnDims, cls: 'dim furn', scale: 10,
+    mat: new THREE.LineBasicMaterial({ color: 0x1a56b0, depthTest: false, transparent: true }) };
+  PANELS.forEach((p, i) => {
+    const thin = p.size.indexOf(Math.min(...p.size));
+    const max = p.pos.map((v, k) => v + p.size[k]);
+    const t = 0.25 + 0.5 * ((i * 0.37) % 1);              // rozsunięcie etykiet, żeby się nie nakładały
+    const n0 = furnDims.children.length;
+    for (let ax = 0; ax < 3; ax++) {
+      if (ax === thin) continue;
+      const a = [...max], b = [...max];
+      a[ax] = p.pos[ax];
+      dim(a, b, [0, 0, 0], { ...fo, t });
+    }
+    for (let k = n0; k < furnDims.children.length; k++) furnDims.children[k].userData.panel = i;
+  });
+}
+const setVis = (g, on) => g.traverse(o => { o.visible = on; });
+const dimsToggle = document.getElementById('dimsToggle');
+const furnToggle = document.getElementById('furnToggle');
+let hovered = null;                             // indeks elementu wskazanego na liście
+const applyDims = () => {
+  setVis(dims, dimsToggle.checked); setVis(furnDims, furnToggle.checked);
+  if (furnToggle.checked && hovered !== null)   // przy wskazanym elemencie tylko jego wymiary
+    for (const c of furnDims.children) c.visible = c.userData.panel === hovered;
+};
+// podświetlenie elementu wskazanego na liście (widoczne także przez inne płyty)
+const hlMat = new THREE.MeshBasicMaterial({ color: 0xff8a00, transparent: true, opacity: 0.8, depthTest: false, side: THREE.DoubleSide });
+function setHovered(i) {
+  if (hovered !== null) { const m = PANELS[hovered].mesh3d; m.material = m.userData.beforeHl; m.renderOrder = 0; }
+  hovered = i;
+  if (i !== null) { const m = PANELS[i].mesh3d; m.userData.beforeHl = m.material; m.material = hlMat; m.renderOrder = 5; }
+  applyDims();
+}
+{
+  const cut = document.getElementById('cut');
+  cut.addEventListener('mouseover', e => {
+    const tr = e.target.closest('tr[data-i]');
+    const i = tr ? +tr.dataset.i : null;
+    if (i !== hovered) setHovered(i);
+  });
+  cut.addEventListener('mouseleave', () => setHovered(null));
+}
+dimsToggle.onchange = furnToggle.onchange = applyDims; applyDims();
+
+addEventListener('resize', () => {
+  labelRenderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+// tryby widoczności: pełny / półprzezroczysty szkielet / ukryty
+const ghostMats = {
+  room:   new THREE.MeshBasicMaterial({ color: 0x7d8fa3, transparent: true, opacity: 0.10, depthWrite: false, side: THREE.DoubleSide }),
+  panels: new THREE.MeshBasicMaterial({ color: 0xc89b5e, transparent: true, opacity: 0.14, depthWrite: false, side: THREE.DoubleSide }),
+};
+const ghostEdge = new THREE.LineBasicMaterial({ color: 0x55657a, transparent: true, opacity: 0.6 });
+const groups = { room, panels };
+function setMode(name, mode) {
+  const g = groups[name], ghost = mode === 'ghost';
+  g.visible = mode !== 'off';
+  const meshes = [];
+  g.traverse(o => { if (o.isMesh) meshes.push(o); });
+  for (const o of meshes) {
+    if (!o.userData.orig) { o.userData.orig = o.material; o.userData.cast = o.castShadow; }
+    o.material = ghost ? ghostMats[name] : o.userData.orig;
+    o.castShadow = ghost ? false : o.userData.cast;
+    if (name === 'room') {                       // pokój dostaje krawędzie tylko w trybie szkieletu
+      if (ghost && !o.userData.edges) {
+        o.userData.edges = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 25), ghostEdge);
+        o.add(o.userData.edges);
+      }
+      if (o.userData.edges) o.userData.edges.visible = ghost;
+    }
+  }
+}
+document.querySelectorAll('#views .seg').forEach(seg => seg.querySelectorAll('button').forEach(b => {
+  b.onclick = () => {
+    seg.querySelectorAll('button').forEach(x => x.classList.toggle('act', x === b));
+    setMode(seg.dataset.g, b.dataset.m);
+  };
+}));
+// ---------- wersje: zapis / odczyt elementów z pliku JSON ----------
+{
+  const $ = id => document.getElementById(id);
+  const r2 = v => Math.round(v * 100) / 100;
+  $('verName').textContent = versionName ? `Wczytana: ${versionName}` : 'Brak mebli (sam pokój)';
+  $('verReset').disabled = !versionName;
+  $('verSave').disabled = $('verInput').disabled = PANELS.length === 0;   // pustego pokoju nie zapisujemy
+  if (PANELS.length === 0) { $('verSave').title = 'Brak mebli do zapisania'; $('verInput').placeholder = 'brak mebli do zapisania'; }
+  $('verReset').title = versionName ? 'Usuwa wczytaną wersję z pamięci i wraca do domyślnej' : 'Nie ma wczytanego pliku';
+  if (versionName) $('verInput').value = versionName;
+  const msg = (t, err) => { $('verMsg').textContent = t; $('verMsg').classList.toggle('err', !!err); };
+
+  $('verSave').onclick = () => {
+    if (PANELS.length === 0) return;
+    const name = $('verInput').value.trim() || versionName || 'wersja';
+    const data = {
+      format: 'parapet-mebel', formatVersion: 1, name, saved: new Date().toISOString(),
+      units: 'cm; size = [X szer., Y wys., Z głęb.], pos = lewy dolny tylny narożnik',
+      notes: stored && stored.notes ? stored.notes : '',   // opis złożenia (Markdown), trafia do eksportu .md
+      panels: PANELS.map(p => {
+        const o = { name: p.name, size: p.size.map(r2), pos: p.pos.map(r2) };
+        for (const k of ['mesh', 'lid', 'note', 'notch']) if (p[k] !== undefined) o[k] = p[k];
+        return o;
+      }),
+    };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    a.download = 'mebel-' + name.toLowerCase().replace(/[^a-z0-9ąćęłńóśźż_-]+/gi, '-') + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    msg(`Zapisano plik ${a.download}`);
+  };
+
+  $('verLoad').onclick = () => $('verFile').click();
+  $('verFile').onchange = async e => {
+    const file = e.target.files[0]; if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (data.format !== 'parapet-mebel' || !validPanels(data.panels))
+        throw new Error('to nie jest plik wersji mebla');
+      localStorage.setItem(STORE_KEY, JSON.stringify({ name: data.name || file.name.replace(/\.json$/i, ''),
+        panels: data.panels, notes: typeof data.notes === 'string' ? data.notes : '' }));
+      location.reload();                         // po przeładowaniu elementy wczytają się z pamięci
+    } catch (err) { msg('Nie udało się wczytać: ' + err.message, true); }
+    e.target.value = '';
+  };
+
+  $('verReset').onclick = () => { localStorage.removeItem(STORE_KEY); location.reload(); };
+}
+
+const lidToggle = document.getElementById('lidToggle');
+renderer.setAnimationLoop(() => {
+  const target = lidToggle.checked ? -THREE.MathUtils.degToRad(85) : 0;
+  for (const l of lids) l.rotation.x += (target - l.rotation.x) * 0.12; controls.update(); renderer.render(scene, camera); labelRenderer.render(scene, camera); });
+</script>
+</body>
+</html>

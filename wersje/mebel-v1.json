@@ -1,0 +1,240 @@
+{
+  "format": "parapet-mebel",
+  "formatVersion": 1,
+  "name": "v1",
+  "saved": "2026-11-12T11:04:29.200Z",
+  "units": "cm; size = [X szer., Y wys., Z głęb.], pos = lewy dolny tylny narożnik",
+  "notes": "## Okucia i dodatki\n\n- Zawiasy do dwóch klap (fortepianowy na całą długość albo 3–4 zawiasy splatane na klapę)\n- Kołki rozporowe z wkrętami do przykręcenia boków do ścian\n- Konfirmaty lub wkręty do płyt, kołki drewniane i klej do ramki maskownicy\n- Klej montażowy do przyklejenia blatu do parapetu\n- Obrzeże na widoczne krawędzie płyt (szczególnie nad kaloryferem)\n- Pasek filcu lub uszczelki pod klapę z blachy\n- Taśma LED pod płytę pod parapetem (opcjonalnie)\n\n## Kolejność składania\n\n1. **Piony.** Bok lewy i bok prawy przykręcić do ścian bocznych, tylną krawędzią do ściany pod oknem. Przegrodę środkową ustawić tak, żeby jej lewa powierzchnia była 800 od lewej ściany. Wszystkie trzy mają wysokość 987 i kończą się pod parapetem.\n2. **Płyta pod parapetem.** Położyć na trzech pionach, dosunąć do ściany pod oknem; leży bezpośrednio pod spodem parapetu (1005). Skręcić z pionami od góry.\n3. **Listwa przednia.** Przykręcić do czoła płyty pod parapetem na całej szerokości. Górna krawędź równo z górą parapetu (1045), dolna wystaje 10 poniżej płyty i zasłania taśmę LED.\n4. **Blat.** Położyć na parapecie i na listwie przedniej, tylną krawędzią do okna, przodem równo z listwą. Przykleić do parapetu klejem montażowym i skręcić z listwą przednią.\n5. **Prawa wnęka – wnętrze.** Półkę prawą zamocować między przegrodą a bokiem prawym, górną powierzchnią na 300. Tył prawy górny postawić przy ścianie, od spodu klapy do płyty pod parapetem.\n6. **Front prawy.** Przykręcić do czół przegrody i boku prawego oraz do czoła półki. Sięga od podłogi do 720; jego lewa krawędź wystaje 60 w lewo poza oś przegrody i stanowi prawy bok ramki maskownicy. Od środka, równo ze spodem klapy, przykręcić do frontu listwę pod klapę.\n7. **Klapa prawa.** Zawiasami do tyłu prawego górnego, górna powierzchnia na 720. Przodem leży na listwie pod klapę. Luz 2 po bokach i z przodu.\n8. **Lewa wnęka – tył.** Tył lewy górny postawić przy ścianie nad kaloryferem, tak samo jak po prawej.\n9. **Ramka maskownicy.** Pion lewy (40) przykręcić do czoła boku lewego. Listwę górną i dolną (60) połączyć na kołki i klej z pionem lewym oraz z lewą krawędzią frontu prawego. Ramka licuje z frontem prawym.\n10. **Blacha maskownicy.** Wyciąć dwa wycięcia na rurki od lewej krawędzi (wysokość 140 i 645 – zmierzyć na miejscu). Przykręcić od tyłu ramki z zakładem 20 na każdej krawędzi, do górnej listwy co ok. 150, żeby listwa nie uginała się pod klapą.\n11. **Klapa lewa z blachy.** Zawias przynitować lub przykręcić śrubkami do blachy i do tyłu lewego górnego. Przodem klapa leży na górnej listwie ramki; pod spód nakleić filc.\n\n## Do sprawdzenia przed zamówieniem\n\n- Szerokość 2100 to wymiar pokoju bez luzu – zmierzyć na wysokości parapetu i przy podłodze, odjąć 2–3 na nierówności ścian.\n- Grubość parapetu (40) zmierzyć w kilku miejscach; od niej zależy wysokość listwy przedniej.\n- Sprawdzić, czy skrzydło okna otwiera się nad blatem (blat ma 18, szczelina pod oknem 17).\n- Zmierzyć, ile od ściany odstaje gałka zaworu – za maskownicą jest 22 luzu przed kaloryferem.\n- Zmierzyć dokładnie, gdzie rurki przecinają płaszczyznę frontu; pion lewy ramki (40) ma ok. 8 luzu do górnej rurki.\n- Jeśli będą listwy przypodłogowe, uwzględnić je w bokach, froncie i ramce.\n- Wysokość osłony LED (10) pasuje tylko do płaskiej taśmy bez profilu.\n",
+  "panels": [
+    {
+      "name": "Blat na parapecie",
+      "size": [
+        210,
+        1.8,
+        25
+      ],
+      "pos": [
+        0,
+        104.5,
+        -2
+      ]
+    },
+    {
+      "name": "Płyta pod parapetem",
+      "size": [
+        210,
+        1.8,
+        21.2
+      ],
+      "pos": [
+        0,
+        98.7,
+        0
+      ]
+    },
+    {
+      "name": "Listwa przednia",
+      "size": [
+        210,
+        6.8,
+        1.8
+      ],
+      "pos": [
+        0,
+        97.7,
+        21.2
+      ]
+    },
+    {
+      "name": "Bok lewy",
+      "size": [
+        1.8,
+        98.7,
+        21.2
+      ],
+      "pos": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Przegroda środkowa",
+      "size": [
+        1.8,
+        98.7,
+        21.2
+      ],
+      "pos": [
+        80,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Bok prawy",
+      "size": [
+        1.8,
+        98.7,
+        21.2
+      ],
+      "pos": [
+        208.2,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Tył prawy górny",
+      "size": [
+        126.4,
+        28.5,
+        1.8
+      ],
+      "pos": [
+        81.8,
+        70.2,
+        0
+      ]
+    },
+    {
+      "name": "Klapa (półka prawa 72)",
+      "size": [
+        126,
+        1.8,
+        19.2
+      ],
+      "pos": [
+        82,
+        70.2,
+        1.8
+      ],
+      "lid": true,
+      "note": "klapa na zawiasach, luz 2 mm"
+    },
+    {
+      "name": "Półka prawa 30",
+      "size": [
+        126.4,
+        1.8,
+        21.2
+      ],
+      "pos": [
+        81.8,
+        28.2,
+        0
+      ]
+    },
+    {
+      "name": "Listwa pod klapę",
+      "size": [
+        126.4,
+        6,
+        1.8
+      ],
+      "pos": [
+        81.8,
+        64.2,
+        19.4
+      ],
+      "note": "przykręcona do frontu od środka"
+    },
+    {
+      "name": "Ramka maskownicy – pion lewy",
+      "size": [
+        4,
+        72,
+        1.8
+      ],
+      "pos": [
+        0,
+        0,
+        21.2
+      ]
+    },
+    {
+      "name": "Ramka maskownicy – dół",
+      "size": [
+        70.9,
+        6,
+        1.8
+      ],
+      "pos": [
+        4,
+        0,
+        21.2
+      ]
+    },
+    {
+      "name": "Ramka maskownicy – góra",
+      "size": [
+        70.9,
+        6,
+        1.8
+      ],
+      "pos": [
+        4,
+        66,
+        21.2
+      ]
+    },
+    {
+      "name": "Maskownica (blacha perf.)",
+      "size": [
+        74.9,
+        64,
+        0.1
+      ],
+      "pos": [
+        2,
+        4,
+        21.1
+      ],
+      "mesh": true,
+      "note": "blacha perforowana 1 mm, od tyłu ramki (zakład 20 mm); 2 wycięcia na rurki"
+    },
+    {
+      "name": "Tył lewy górny",
+      "size": [
+        78.2,
+        28.5,
+        1.8
+      ],
+      "pos": [
+        1.8,
+        70.2,
+        0
+      ]
+    },
+    {
+      "name": "Klapa lewa (blacha perf.)",
+      "size": [
+        77.8,
+        0.1,
+        21.2
+      ],
+      "pos": [
+        2,
+        72,
+        1.8
+      ],
+      "mesh": true,
+      "lid": true,
+      "note": "blacha perforowana 1 mm, na zawiasach, przodem leży na ramce"
+    },
+    {
+      "name": "Front prawy",
+      "size": [
+        135.1,
+        72,
+        1.8
+      ],
+      "pos": [
+        74.9,
+        0,
+        21.2
+      ],
+      "note": "lewa krawędź = prawy bok ramki maskownicy"
+    }
+  ]
+}

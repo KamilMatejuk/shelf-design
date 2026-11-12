@@ -100,8 +100,8 @@ values > 0, and a 3-number `pos`; otherwise it is skipped with a console error.
 Renderer limits to respect:
 
 - Furniture board is always `1.8` thick. Sheet metal is `0.1`.
-- A vertical `mesh` panel must be thin in **z** (facing the room). A horizontal `mesh` panel only
-  renders correctly when it is also a `lid`.
+- A vertical `mesh` panel must be thin in **z** (facing the room) or in **x** (facing sideways).
+  A horizontal `mesh` panel only renders correctly when it is also a `lid`.
 - Panels are boxes. Anything else (cut-outs for pipes, rounded corners) cannot be drawn – describe
   it in `note` and in `notes`.
 - Round numbers to 2 decimals.
@@ -195,6 +195,12 @@ Only when the owner asks for a viewer feature. Things to know:
 - 3D meshes are kept in `panelMeshes[i]`, never on the panel objects.
 - `validPanels()` is the single place that defines what a showable design is.
 - Avoid `alert`/`confirm`/`prompt`; show messages in the page.
+- Under the parts list, **Szacowany koszt** (`costHtml`, `fillCost`) estimates the price from the
+  panels: board in whole 2800×2070 sheets with 25 % waste, cutting and edge banding as half the
+  sum of perimeters, perforated sheet by area + 20 %, plus a lump sum for hardware. Unit prices
+  (`PRICE_DEF`) are rough guesses; the owner can edit them in the page, and they are remembered
+  in `localStorage` under `parapet.ceny`. The `.md` export includes the same table (`costMd`),
+  with the prices currently entered, between the sheet-metal table and `notes`.
 
 ## Verifying with Playwright
 

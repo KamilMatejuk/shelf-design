@@ -54,7 +54,7 @@ marked as an estimate.
 | Room | x 0–210, y 0–250 |
 | Window sill (parapet) | x 1–209, y 100.5–104.5, z -2–7 |
 | Window frame | starts at y 106.2 (1.7 gap above the sill), plane z = -2 |
-| Radiator ribs | x 29–77, y 10–69, z 5–19 (bottom y 10 is an estimate) |
+| Radiator ribs | x 29–77, y 12–69, z 5–19 |
 | Radiator valve + knob | x 19–29, y about 62–67, z up to about 19 (knob depth not measured) |
 | Riser pipe A | Ø3, x 3.5–6.5, z 48–51, floor to ceiling |
 | Riser pipe B | Ø3, x 3.5–6.5, z 53–56, floor to ceiling |
@@ -138,7 +138,7 @@ export follow the array order.
    d = next(v for v in json.loads(block) if v['name'] == sys.argv[1])
    obstacles = {
        'parapet': ([1, 100.5, -2], [208, 4, 9]),
-       'kaloryfer': ([29, 10, 5], [48, 59, 14]),
+       'kaloryfer': ([29, 12, 5], [48, 57, 14]),
        'zawór': ([19, 62, 9], [10, 5, 10]),
        'pion A': ([3.5, 0, 48], [3, 250, 3]),
        'pion B': ([3.5, 0, 53], [3, 250, 3]),
@@ -184,7 +184,6 @@ Assumptions not yet confirmed by the owner – keep them visible in `notes`:
 
 - The 1.7 cm gap between sill and window is vertical (the window frame starts above the sill).
 - The radiator width of 58 cm includes the valve and knob.
-- The radiator bottom is 10 cm above the floor.
 - The sill ends 1 cm short of each side wall.
 - No skirting boards.
 

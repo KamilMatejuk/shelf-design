@@ -1,10 +1,11 @@
 # Parapet – window-sill furniture designer
 
 A single-page 3D viewer (`index.html`, three.js) for designing a DIY built-in unit that covers a
-window sill, adds storage and hides a radiator. The room is fixed. Furniture designs are data:
-a JSON array of versions inline in `index.html`, in the `<script type="application/json"
-id="wersje">` block. **Adding a new design means adding an entry to that block – not touching the
-viewer code.**
+window sill, adds storage and hides a radiator. Rooms and furniture designs are both data, inline
+in `index.html`: rooms in the `<script type="application/json" id="pokoje">` block, designs
+(versions) in the `<script type="application/json" id="wersje">` block; every version belongs to
+one room. **Adding a room or a design means adding an entry to one of those blocks – not touching
+the viewer code.**
 
 The owner speaks Polish. All UI text, element names and assembly notes are in Polish. Reply in
 the language the owner writes in.
@@ -19,35 +20,58 @@ python3 -m http.server 48765 --bind 127.0.0.1     # port 8765 is taken by someth
 Open `http://127.0.0.1:48765/index.html`. three.js 0.160 loads from the jsDelivr CDN, so internet
 is needed. The browser caches aggressively: reload with Ctrl+Shift+R, or add `?v=N` to the URL.
 
-The **Wersja** section of the left panel has one button per version; switching rebuilds the
-scene in place. The page opens on the version last selected (remembered in `localStorage`, key
-`parapet.wybrana`), or on the first one. The page is read-only: versions are added, renamed or
-removed only by editing the `wersje` block in `index.html` when the owner asks for it.
+The **Pokój** section of the left panel has one button per room, and the **Wersja** section below
+it shows only the versions of the selected room. Switching a room rebuilds the room, the room
+dimensions and the camera; switching a version rebuilds the furniture. Both happen in place. The
+page opens on the room last selected (`localStorage` key `parapet.pokoj`) and, within a room, on
+the version last selected there (`parapet.wybrana.<room name>`), or on the first one. The page is
+read-only: rooms and versions are added, renamed or removed only by editing the blocks in
+`index.html` when the owner asks for it.
 
 ## Files
 
 | Path | What it is |
 |---|---|
-| `index.html` | Viewer: room geometry, panel renderer, dimensions, parts list, export, version switch. The `wersje` block holds all designs; `v1` is the reference design (17 parts, passes the overlap check) |
-| `pokoj.jpeg`, `rzut-rur.jpeg` | Owner's photo of the room and top-down sketch of the pipes |
+| `index.html` | Viewer: room renderer, panel renderer, dimensions, parts list, export, room and version switch. The `pokoje` block holds the rooms, the `wersje` block all designs; `v1` (room `Sypialnia`) is the reference design (17 parts, passes the overlap check) |
+| `pokoj.jpeg`, `rzut-rur.jpeg` | Owner's photo of the room `Sypialnia` and top-down sketch of its pipes |
 | `.playwright-mcp/` | Scratch screenshots from testing; safe to ignore |
 
 ## Coordinate system
 
-Units are **centimetres** in the version data and in the code. The parts list and exports show millimetres.
+Units are **centimetres** in the room data, the version data and the code. The parts list and exports show millimetres.
+Each room has its own coordinates (values below are for `Sypialnia`):
 
-- **x** – from the left wall to the right: `0 … 210`
-- **y** – from the floor up: `0 … 250`
+- **x** – from the left wall to the right: `0 … 210` (room `size[0]`)
+- **y** – from the floor up: `0 … 250` (room `size[1]`)
 - **z** – from the face of the wall under the window, into the room. The window is recessed, so
-  its plane is at `z = -2`.
+  its plane is at `z = -2` (`-window.recess`).
 
 A panel is an axis-aligned box: `pos` is its corner with the smallest x, y and z (left, bottom,
 nearest the window wall); `size` is `[x width, y height, z depth]`.
 
-## The room (fixed – do not change)
+## Room format
 
-Defined in the `R` object at the top of the script in `index.html`. Measured by the owner unless
-marked as an estimate.
+The `pokoje` block is a JSON array; its order is the button order. A room is shown only if it
+passes `validRoom()`; otherwise it is skipped with a console error. Never change a room's
+measurements unless the owner gives new ones. Fields (cm):
+
+| Field | Required | Meaning |
+|---|---|---|
+| `name` | yes | Unique, non-empty; shown on the button and referenced by versions' `room` |
+| `size` | yes | `[width x, height y]` of the room |
+| `depth` | yes | How deep into the room the floor, ceiling and side walls are drawn |
+| `wallT` | yes | Thickness of the window wall (drawn only) |
+| `window` | yes | `{x, w, h, recess, gap, split?}`: left edge, width and height of the opening; how far the frame is set back behind the wall face; gap between sill top and frame. `split` = list of mullion positions as fractions of `w` (`[0.43]` = two sashes; omit for one sash) |
+| `sill` | yes | `{top, t, out, over}`: height of the sill's top face, thickness, projection in front of the wall, overhang beyond the opening on each side |
+| `radiators` | no | List of `{x, y, z, w, h, d, ribs, collectors?, valve?}`: min corner and size of the ribs, number of ribs, heights of the horizontal headers, and `valve: {side: "left"/"right", w}` – only widens the radiator's dimension span; draw the valve itself in `pipes` |
+| `pipes` | no | List of `{name?, r, points, mat?}`. 2 points = straight cylinder, more = smooth curve through the points. `mat`: `pipe` (default), `metal`, `white`. Use for risers, branches, valves, knobs, brackets |
+| `dims` | no | Extra room dimensions in the drawing: `{a, b, off?}` points in cm (the room, sill and radiator dimensions are generated automatically) |
+| `info` | no | Extra rows `[label, value]` for **Tabela wymiarów pokoju** |
+| `notes` | no | Markdown lines added to `## Pomieszczenie` in the `.md` export |
+
+### Room `Sypialnia`
+
+Measured by the owner unless marked as an estimate.
 
 | Thing | Occupies (cm) |
 |---|---|
@@ -71,6 +95,7 @@ The `wersje` block is a JSON array; its order is the button order. One entry:
 ```json
 {
   "name": "v1",
+  "room": "Sypialnia",
   "saved": "2026-11-12T11:02:28.000Z",
   "notes": "## Okucia i dodatki\n\n- ...\n\n## Kolejność składania\n\n1. ...\n",
   "panels": [
@@ -80,7 +105,8 @@ The `wersje` block is a JSON array; its order is the button order. One entry:
 }
 ```
 
-`name` must be non-empty and unique. Keep one panel per line. The text is inside a `<script>` tag, so write `<` as `\u003c`. A version is shown only
+`name` must be non-empty and unique across all rooms. `room` must be the `name` of a room in the
+`pokoje` block; a version with an unknown or missing `room` is skipped with a console error. Keep one panel per line. The text is inside a `<script>` tag, so write `<` as `\u003c`. A version is shown only
 if `panels` is a non-empty array and every panel has a string `name`, a 3-number `size` with all
 values > 0, and a 3-number `pos`; otherwise it is skipped with a console error.
 
@@ -124,25 +150,32 @@ export follow the array order.
 
 ## Adding a new design
 
-1. Copy the closest existing entry in the `wersje` block and append it as a new entry (or after
-   the one it is based on). Never change an existing version unless the owner asks for that.
+1. Copy the closest existing entry of the same room in the `wersje` block and append it as a new
+   entry (or after the one it is based on); keep its `room`. Never change an existing version unless the owner asks for that.
 2. Set a new unique `name` (`v3-<short-slug>`) and `saved`, and edit `panels`.
-3. Check every panel against the obstacle table above and against the other panels. Panels may
-   touch but must not overlap. This script prints overlaps:
+3. Check every panel against its room (the obstacle table for `Sypialnia` above) and against the
+   other panels. Panels may touch but must not overlap. This script reads the obstacles from the
+   version's room – the sill, the radiators and every straight (2-point) pipe – and prints overlaps:
 
    ```bash
    python3 - '<version name>' <<'EOF'
    import json, re, sys, itertools
    html = open('index.html', encoding='utf-8').read()
-   block = re.search(r'<script type="application/json" id="wersje">\n(.*?)\n</script>', html, re.S).group(1)
-   d = next(v for v in json.loads(block) if v['name'] == sys.argv[1])
-   obstacles = {
-       'parapet': ([1, 100.5, -2], [208, 4, 9]),
-       'kaloryfer': ([29, 12, 5], [48, 57, 14]),
-       'zawór': ([19, 62, 9], [10, 5, 10]),
-       'pion A': ([3.5, 0, 48], [3, 250, 3]),
-       'pion B': ([3.5, 0, 53], [3, 250, 3]),
-   }
+   block = lambda id: json.loads(re.search(r'<script type="application/json" id="%s">\n(.*?)\n</script>' % id, html, re.S).group(1))
+   d = next(v for v in block('wersje') if v['name'] == sys.argv[1])
+   r = next(x for x in block('pokoje') if x['name'] == d['room'])
+   (W, H), win, sill = r['size'], r['window'], r['sill']
+   sx = max(0, win['x'] - sill['over'])
+   obstacles = {'parapet': ([sx, sill['top'] - sill['t'], -win['recess']],
+                            [min(win['w'] + 2 * sill['over'], W - sx), sill['t'], win['recess'] + sill['out']])}
+   for i, k in enumerate(r.get('radiators', [])):
+       obstacles['kaloryfer %d' % (i + 1)] = ([k['x'], k['y'], k['z']], [k['w'], k['h'], k['d']])
+   for i, p in enumerate(r.get('pipes', [])):   # tylko proste odcinki (2 punkty); łuki sprawdzić na oko
+       if len(p['points']) != 2: continue
+       a, b, rr = *p['points'], p['r']
+       lo = [min(a[k], b[k]) - (rr if a[k] == b[k] else 0) for k in range(3)]
+       hi = [max(a[k], b[k]) + (rr if a[k] == b[k] else 0) for k in range(3)]
+       obstacles[p.get('name', 'rura %d' % (i + 1))] = (lo, [hi[k] - lo[k] for k in range(3)])
    boxes = [(p['name'], p['pos'], p['size']) for p in d['panels']]
    def hit(a, b, eps=0.01):
        return all(a[1][k] + a[2][k] > b[1][k] + eps and b[1][k] + b[2][k] > a[1][k] + eps for k in range(3))
@@ -152,12 +185,12 @@ export follow the array order.
        for n, (pos, size) in obstacles.items():
            if hit(a, (n, pos, size)): print('HITS', a[0], '->', n)
        lo, hi = a[1], [a[1][k] + a[2][k] for k in range(3)]
-       if lo[0] < 0 or hi[0] > 210 or lo[1] < 0 or hi[1] > 250 or lo[2] < -2:
+       if lo[0] < 0 or hi[0] > W or lo[1] < 0 or hi[1] > H or lo[2] < -win['recess']:
            print('OUTSIDE ROOM', a[0])
    EOF
    ```
 
-   The branch pipes are curved and are not in the script – check them by eye in the viewer.
+   Curved pipes (3+ points, e.g. the branch pipes) are not in the script – check them by eye in the viewer.
    A panel that wraps the sill on purpose (like a notched side) will be reported; that is fine if
    it has a matching `notch`.
 4. Rewrite `notes` for the new design.
@@ -180,7 +213,7 @@ export follow the array order.
   at the top. Do not box the radiator in with solid board.
 - Board sizes in the data are nominal, with no allowance for uneven walls. Say so in `notes`.
 
-Assumptions not yet confirmed by the owner – keep them visible in `notes`:
+Assumptions about `Sypialnia` not yet confirmed by the owner – keep them visible in `notes`:
 
 - The 1.7 cm gap between sill and window is vertical (the window frame starts above the sill).
 - The radiator width of 58 cm includes the valve and knob.
@@ -192,8 +225,12 @@ Assumptions not yet confirmed by the owner – keep them visible in `notes`:
 Only when the owner asks for a viewer feature. Things to know:
 
 - `DEFAULT_PANELS` stays an empty array – used only when there is no valid version.
-- Do not change the values in `R` unless the owner gives new measurements.
-- `VERSIONS` is the parsed `wersje` block; `current` is the selected version (`null` only when there is none).
+- The room is data, not code: room geometry belongs in the `pokoje` block. `ROOMS` is the parsed
+  block (only rooms passing `validRoom()`), `ROOM` the selected room. `selectRoom(r)` sets `ROOM`,
+  calls `buildRoom()` (clears and rebuilds the `room` group, sun, **Tabela wymiarów pokoju** and,
+  via `buildRoomDims()`, the room dimensions; keeps the room visibility mode), resets the camera
+  (`VIEWS()` depends on the room width), filters the version buttons to that room and selects a version.
+- `VERSIONS` is the parsed `wersje` block; `current` is the selected version (`null` only when the room has none).
   `PANELS` is `current.panels`, or the empty default only when there is no valid version. `select(v)` rebuilds the panels, parts list
   and furniture dimensions (`buildPanels`, `buildCut`, `buildFurnDims`) without a reload.
 - 3D meshes are kept in `panelMeshes[i]`, never on the panel objects.
@@ -222,6 +259,7 @@ Only when the owner asks for a viewer feature. Things to know:
 
 ```
 navigate  http://127.0.0.1:48765/index.html?v=<n>
+click     #roomList button:has-text("<room name>")
 click     #verList button:has-text("<version name>")
 screenshot                    (must be saved under the project folder)
 console messages (level error) – expect none

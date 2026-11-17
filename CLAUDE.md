@@ -67,6 +67,7 @@ measurements unless the owner gives new ones. Fields (cm):
 | `pipes` | no | List of `{name?, r, points, mat?}`. 2 points = straight cylinder, more = smooth curve through the points. `mat`: `pipe` (default), `metal`, `white`. Use for risers, branches, valves, knobs, brackets |
 | `dims` | no | Extra room dimensions in the drawing: `{a, b, off?}` points in cm (the room, sill and radiator dimensions are generated automatically) |
 | `info` | no | Extra rows `[label, value]` for **Tabela wymiarów pokoju** |
+| `furniture` | no | Room furnishings for visualisation only (sofa, bed, wardrobe…), toggled with **Widoczność → Meble**; not in the parts list, cost or export. List of `{name, color?, parts}`; `parts` = list of boxes `{pos, size, color?, r?}` (min corner and size in cm like panels, `color` as `"#rrggbb"` – part colour overrides the item colour, `r` = edge rounding radius in cm, e.g. 3–6 for upholstery) |
 | `notes` | no | Markdown lines added to `## Pomieszczenie` in the `.md` export |
 
 ### Room `Sypialnia`
@@ -199,7 +200,7 @@ export follow the array order.
    A panel that wraps the sill on purpose (like a notched side) will be reported; that is fine if
    it has a matching `notch`.
 4. Rewrite `notes` for the new design.
-5. Select the version in the viewer and look at it from the front, the side and with **Pokój: szkielet**.
+5. Select the version in the viewer and look at it from the front, the side and with **Pokój: szkielet** (there are no preset views – rotate the camera by dragging, e.g. Playwright `mouse.move`/`down`/`move`/`up` on the canvas).
    Tick **Klapy i drzwiczki otwarte** if there are lids. Check the browser console for errors.
 6. Tell the owner the version name and list the cut sizes in mm. State every assumption you made.
 
@@ -234,11 +235,12 @@ Only when the owner asks for a viewer feature. Things to know:
   block (only rooms passing `validRoom()`), `ROOM` the selected room. `selectRoom(r)` sets `ROOM`,
   calls `buildRoom()` (clears and rebuilds the `room` group, sun, **Tabela wymiarów pokoju** and,
   via `buildRoomDims()`, the room dimensions; keeps the room visibility mode), resets the camera
-  (`VIEWS()` depends on the room width), filters the version buttons to that room and selects a version.
+  (`resetView()`, start view from `START_VIEW()` – same distance in every room, centred on its width), filters the version buttons to that room and selects a version.
 - `VERSIONS` is the parsed `wersje` block; `current` is the selected version (`null` only when the room has none).
   `PANELS` is `current.panels`, or the empty default only when there is no valid version. `select(v)` rebuilds the panels, parts list
-  and furniture dimensions (`buildPanels`, `buildCut`, `buildFurnDims`) without a reload.
+  and furniture dimensions (`buildPanels`, `buildCut`, `buildProjDims`) without a reload.
 - 3D meshes are kept in `panelMeshes[i]`, never on the panel objects.
+- The **Widoczność** rows remember their last mode (`pełny/szkielet/ukryty` per row: `room`, `panels`, `furn`) in `localStorage` under `parapet.widocznosc`; restored before the first draw. Room furniture defaults to hidden.
 - `validPanels()` is the single place that defines what a showable design is.
 - Avoid `alert`/`confirm`/`prompt`; show messages in the page.
 - Under the parts list, **Szacowany koszt** (`costHtml`, `fillCost`) estimates the price from the
@@ -257,7 +259,7 @@ Only when the owner asks for a viewer feature. Things to know:
   order; `updateViewOffset()` shifts the
   render centre (`camera.setViewOffset`) into the free half while a sheet is open; it only sets the target (`vo`), and
   `stepViewOffset()` in the render loop eases toward it. On touch screens (`touchUI()`, `hover: none`), tapping a parts-list
-  row toggles the highlight and tapping ⚠ shows the note. In portrait, `setView` moves the camera
+  row toggles the highlight and tapping ⚠ shows the note. In portrait, `resetView` moves the camera
   back (`viewFit`) so the whole wall fits, and `resize` rescales it when the phone is rotated.
 
 ## Verifying with Playwright
@@ -270,7 +272,7 @@ screenshot                    (must be saved under the project folder)
 console messages (level error) – expect none
 ```
 
-Useful selectors: view buttons `button[data-v="persp|front|top|side"]`, visibility
-`.seg[data-g="room|panels"] button[data-m="on|ghost|off"]`, `#dimsToggle`, `#furnToggle`,
+Useful selectors: visibility
+`.seg[data-g="room|panels|furn"] button[data-m="on|ghost|off"]` (rows **Pokój**, **Projekt** = the designed unit, **Meble** = room `furniture`), `#dimsToggle` (room), `#projToggle` (project), `#mebleToggle` (room furniture) – all drawing dimensions are in cm,
 `#lidToggle`, assembly slider `#stepRange` (+ `#stepPrev`, `#stepNext`, label `#stepLabel`),
 parts list `#cut summary`, mobile bar `#mbar button[data-sheet="views|cut"]` (use a 390×844 viewport), row `#cut tr[data-i="N"]`, export `#exportMd`.

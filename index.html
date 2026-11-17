@@ -14,7 +14,6 @@
   #views h2 { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #7a8594; margin: 0 0 6px; }
   #views button { border: 0; border-radius: 6px; background: #eef1f5; color: #223; cursor: pointer; font: inherit; padding: 6px 4px; }
   #views button:hover { background: #dfe6f3; }
-  #views .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   #views .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
   #views .row:first-of-type { margin-top: 0; }
   #views .seg { display: flex; background: #eef1f5; border-radius: 6px; padding: 2px; }
@@ -67,7 +66,8 @@
   /* etykiety wymiarów */
   .dim { background: #fff; color: #b3261e; border: 1px solid #b3261e; border-radius: 4px; padding: 0 4px;
     font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .dim.furn { color: #1a56b0; border-color: #1a56b0; }
+  .dim.proj { color: #1a56b0; border-color: #1a56b0; }
+  .dim.meble { color: #2e7d32; border-color: #2e7d32; }
   #labels { position: fixed; inset: 0; pointer-events: none; }
   body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
   .h-touch { display: none; }
@@ -120,28 +120,22 @@
 <div id="tip"></div>
 <div id="views" class="card">
   <section>
-    <h2>Widok</h2>
-    <div class="grid">
-      <button data-v="persp">Perspektywa</button>
-      <button data-v="front">Z przodu</button>
-      <button data-v="top">Z góry</button>
-      <button data-v="side">Z boku</button>
-    </div>
-  </section>
-  <section>
     <h2>Widoczność</h2>
     <div class="row"><span>Pokój</span>
       <span class="seg" data-g="room"><button data-m="on" class="act">pełny</button><button data-m="ghost">szkielet</button><button data-m="off">ukryty</button></span></div>
+    <div class="row"><span>Projekt</span>
+      <span class="seg" data-g="panels"><button data-m="on" class="act">pełny</button><button data-m="ghost">szkielet</button><button data-m="off">ukryty</button></span></div>
     <div class="row"><span>Meble</span>
-      <span class="seg" data-g="panels"><button data-m="on" class="act">pełne</button><button data-m="ghost">szkielet</button><button data-m="off">ukryte</button></span></div>
+      <span class="seg" data-g="furn"><button data-m="on">pełne</button><button data-m="ghost">szkielet</button><button data-m="off" class="act">ukryte</button></span></div>
   </section>
   <section>
     <h2>Wymiary na rysunku</h2>
     <label class="row"><span><i class="sw" style="background:#b3261e"></i>Pokój <span class="unit">[cm]</span></span><input type="checkbox" id="dimsToggle"></label>
-    <label class="row"><span><i class="sw" style="background:#1a56b0"></i>Mebel <span class="unit">[mm]</span></span><input type="checkbox" id="furnToggle"></label>
+    <label class="row"><span><i class="sw" style="background:#1a56b0"></i>Projekt <span class="unit">[cm]</span></span><input type="checkbox" id="projToggle"></label>
+    <label class="row"><span><i class="sw" style="background:#2e7d32"></i>Meble <span class="unit">[cm]</span></span><input type="checkbox" id="mebleToggle"></label>
   </section>
   <section>
-    <h2>Mebel</h2>
+    <h2>Projekt</h2>
     <label class="row"><span>Klapy i drzwiczki otwarte</span><input type="checkbox" id="lidToggle"></label>
   </section>
   <section>
@@ -168,7 +162,7 @@
   {
     "name": "Sypialnia",
     "size": [210, 250],
-    "depth": 180,
+    "depth": 260,
     "wallT": 30,
     "window": {"x": 3, "w": 204, "h": 138, "recess": 2, "gap": 1.7, "split": [0.43]},
     "sill": {"top": 104.5, "t": 4, "out": 7, "over": 2},
@@ -202,12 +196,22 @@
       ["Gałązki: wysokość osi", "14 / 64.5"],
       ["Gałązki: odstają od lewej ściany", "11 / 7"]
     ],
+    "furniture": [
+      {"name": "Łóżko 140 × 200, czarne", "color": "#1b1b1b", "parts": [
+        {"pos": [65, 0, 23], "size": [145, 40, 2.5]},
+        {"pos": [65, 0, 225.5], "size": [145, 40, 2.5]},
+        {"pos": [65, 0, 25.5], "size": [2.5, 40, 200.0]},
+        {"pos": [207.5, 0, 25.5], "size": [2.5, 40, 200.0]},
+        {"pos": [67.5, 28, 25.5], "size": [140, 2, 200], "color": "#d9c49a"},
+        {"pos": [67.5, 30, 25.5], "size": [140, 20, 200], "color": "#eeece6", "r": 4}
+      ]}
+    ],
     "notes": "- Gałązki kaloryfera biegną wzdłuż lewej ściany na wysokości 140 i 645 (osie)"
   },
   {
     "name": "Salon",
     "size": [298, 250],
-    "depth": 180,
+    "depth": 300,
     "wallT": 30,
     "window": {"x": 3, "w": 292, "h": 138, "recess": 0, "gap": 1.7, "split": [0.25, 0.5, 0.75], "hinges": ["left", "right", "left", "right"]},
     "sill": {"top": 107.5, "t": 4.3, "out": 9, "over": 2, "apron": {"h": 9.7, "t": 3}},
@@ -232,6 +236,34 @@
       ["Kaloryfer: od prawego rogu (lewa krawędź)", 99],
       ["Gałązki: wysokość osi", "14 / 66"],
       ["Gałązki: odstają od prawej ściany", "11 / 7"]
+    ],
+    "furniture": [
+      {"name": "Narożnik DRITTO (Agata), zielony", "color": "#1f5a3d", "parts": [
+        {"pos": [20, 4, 45], "size": [120, 39, 85], "r": 4},
+        {"pos": [20, 4, 130], "size": [71, 39, 119], "r": 4},
+        {"pos": [0, 4, 28], "size": [91, 53, 17], "r": 5},
+        {"pos": [0, 4, 249], "size": [91, 53, 17], "r": 5},
+        {"pos": [0, 4, 45], "size": [20, 68, 204], "r": 5},
+        {"pos": [20, 43, 50], "size": [18, 49, 64], "r": 8},
+        {"pos": [20, 43, 117], "size": [18, 49, 64], "r": 8},
+        {"pos": [20, 43, 184], "size": [18, 49, 64], "r": 8},
+        {"pos": [130, 0, 49], "size": [6, 4, 6], "color": "#c49a6c"},
+        {"pos": [130, 0, 120], "size": [6, 4, 6], "color": "#c49a6c"},
+        {"pos": [4, 0, 32], "size": [6, 4, 6], "color": "#c49a6c"},
+        {"pos": [81, 0, 32], "size": [6, 4, 6], "color": "#c49a6c"},
+        {"pos": [4, 0, 256], "size": [6, 4, 6], "color": "#c49a6c"},
+        {"pos": [81, 0, 256], "size": [6, 4, 6], "color": "#c49a6c"}
+      ]},
+      {"name": "Biurko stojące 160 × 70, czarne", "color": "#1b1b1b", "parts": [
+        {"pos": [228, 69.5, 28], "size": [70, 2.5, 160], "r": 0.5},
+        {"pos": [260.5, 4, 48], "size": [5, 62.5, 7]},
+        {"pos": [233, 0, 47.5], "size": [60, 4, 8], "r": 1},
+        {"pos": [233, 66.5, 48], "size": [55, 3, 7]},
+        {"pos": [260.5, 4, 161], "size": [5, 62.5, 7]},
+        {"pos": [233, 0, 160.5], "size": [60, 4, 8], "r": 1},
+        {"pos": [233, 66.5, 161], "size": [55, 3, 7]},
+        {"pos": [261.0, 60.5, 55], "size": [4, 6, 106]}
+      ]}
     ],
     "notes": "- Okno jest w płaszczyźnie ściany pod parapetem (parapet wystaje 90 zarówno od ściany, jak i od okna) – założenie z podanych wymiarów\n- Kaloryfer przy prawej ścianie: lewa krawędź 990 od prawego rogu, 750 szerokości z zaworem i gałką (żeberka 650, 9 szt. – liczba żeberek orientacyjna)\n- Gałązki wychodzą prosto z prawej ściany (bez pionów) na wysokości 140 i 660 (osie), odstają od niej 110 i 70"
   }
@@ -444,6 +476,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 // =====================================================================
 //  POKOJE — zapisane w bloku <script id="pokoje"> powyżej (dane, nie kod).
@@ -471,6 +504,10 @@ const validRoom = r => r && typeof r.name === 'string' && r.name !== '' &&
     (p.mat === undefined || ['pipe', 'metal', 'white'].includes(p.mat))))) &&
   (r.dims === undefined || (Array.isArray(r.dims) && r.dims.every(d => d && isPt(d.a) && isPt(d.b) && (d.off === undefined || isPt(d.off))))) &&
   (r.info === undefined || (Array.isArray(r.info) && r.info.every(x => Array.isArray(x) && x.length === 2))) &&
+  (r.furniture === undefined || (Array.isArray(r.furniture) && r.furniture.every(f =>   // wyposażenie pokoju (tylko do wizualizacji)
+    f && typeof f.name === 'string' && (f.color === undefined || typeof f.color === 'string') &&
+    Array.isArray(f.parts) && f.parts.length > 0 && f.parts.every(q => q && isPt(q.pos) && isPt(q.size) && q.size.every(v => v > 0) &&
+      (q.color === undefined || typeof q.color === 'string') && (q.r === undefined || (isNum(q.r) && q.r >= 0)))))) &&
   (r.notes === undefined || typeof r.notes === 'string');
 let ROOMS = [];
 try { ROOMS = JSON.parse(document.getElementById('pokoje').textContent); } catch (err) { console.error('Blok pokoi w index.html jest uszkodzony', err); }
@@ -500,20 +537,14 @@ scene.background = new THREE.Color(0xdfe6ec);
 const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 1, 5000);
 const controls = new OrbitControls(camera, renderer.domElement);
 
-const VIEWS = () => {                           // odległość kamery stała dla każdego pokoju (ta sama skala wysokości);
-  const W = roomW();                            // szerszy pokój tylko przesuwa środek kadru
-  return {
-    persp: [[W / 2 + 63, 200, 470], [W / 2, 115, 0]],
-    front: [[W / 2, 90, 420],       [W / 2, 90, 0]],
-    top:   [[W / 2, 520, 60.01],    [W / 2, 0, 60]],
-    side:  [[W / 2 + 485, 90, 60],  [W / 2, 90, 60]],
-  };
-};
+// widok startowy: odległość kamery stała dla każdego pokoju (ta sama skala wysokości);
+// szerszy pokój tylko przesuwa środek kadru
+const START_VIEW = () => { const W = roomW(); return [[W / 2 + 63, 200, 470], [W / 2, 115, 0]]; };
 // kamera dalej tylko wtedy, gdy szerokość ściany nie mieści się w kadrze (wąski ekran, szeroki pokój)
 const viewFit = () => Math.max(1, 0.75 * (roomW() / 210) / camera.aspect);
 let camFit = 1;
-function setView(name) {
-  const [p, t] = VIEWS()[name];
+function resetView() {
+  const [p, t] = START_VIEW();
   // wąski ekran (telefon pionowo): kamera dalej, żeby cała szerokość ściany zmieściła się w kadrze
   const fit = camFit = viewFit();
   const pos = new THREE.Vector3(...p).sub(new THREE.Vector3(...t)).multiplyScalar(fit).add(new THREE.Vector3(...t));
@@ -545,8 +576,7 @@ function stepViewOffset() {
 }
 const touchUI = () => matchMedia('(hover: none)').matches;          // ekran dotykowy bez myszy
 const mobileUI = () => matchMedia('(max-width: 760px), (max-height: 500px)').matches;
-setView('persp');
-document.querySelectorAll('#views button[data-v]').forEach(b => b.onclick = () => setView(b.dataset.v));
+resetView();
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0xd8d2c8, 2.4));
 const sun = new THREE.DirectionalLight(0xffffff, 1.6);
@@ -569,6 +599,29 @@ const M = {
 
 const room = new THREE.Group();
 scene.add(room);
+const furn = new THREE.Group();                  // meble i wyposażenie pokoju (kanapa, łóżko…): tylko do wizualizacji
+scene.add(furn);
+const furnMats = {};
+const furnMat = c => furnMats[c] || (furnMats[c] = new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 }));
+function buildFurn() {
+  furn.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+  furn.clear();
+  for (const f of ROOM.furniture || []) {
+    const g = new THREE.Group(); g.name = f.name;
+    for (const q of f.parts) {
+      const [w, h, d] = q.size, r = Math.min(q.r || 0, w / 2, h / 2, d / 2);
+      const geo = r > 0 ? new RoundedBoxGeometry(w, h, d, 3, r) : new THREE.BoxGeometry(w, h, d);
+      const m = new THREE.Mesh(geo, furnMat(q.color || f.color || '#9a9a9a'));
+      m.position.set(q.pos[0] + w / 2, q.pos[1] + h / 2, q.pos[2] + d / 2);
+      m.castShadow = m.receiveShadow = true;
+      g.add(m);
+    }
+    furn.add(g);
+  }
+  const act = document.querySelector('.seg[data-g="furn"] button.act');
+  setMode('furn', act ? act.dataset.m : 'on');
+  buildMebleDims();
+}
 
 function box(w, h, d, x, y, z, mat, parent = room) {      // x,y,z = narożnik min
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
@@ -724,6 +777,7 @@ function buildRoom() {
   buildRoomDims();
   const act = document.querySelector('.seg[data-g="room"] button.act');
   setMode('room', act ? act.dataset.m : 'on');                     // zachowaj tryb widoczności pokoju
+  buildFurn();
 }
 const info = document.getElementById('info');
 
@@ -1035,38 +1089,62 @@ function buildRoomDims() {                      // wymiary pokoju [cm]: ogólne 
   for (const d of ROOM.dims || []) dim(d.a, d.b, d.off || [0, 0, 0]);
   applyDims();
 }
-// wymiary mebla [mm]: dla każdego elementu dwa większe wymiary wzdłuż jego przednich/górnych krawędzi
-const furnDims = new THREE.Group();
-scene.add(furnDims);
-function buildFurnDims() {
-  furnDims.traverse(o => { if (o.geometry) o.geometry.dispose(); });
-  furnDims.clear();                              // CSS2DObject sam usuwa swoją etykietę z DOM
-  const fo = { group: furnDims, cls: 'dim furn', scale: 10,
+// wymiary projektu [cm]: dla każdego elementu dwa większe wymiary wzdłuż jego przednich/górnych krawędzi
+const projDims = new THREE.Group();
+scene.add(projDims);
+function buildProjDims() {
+  projDims.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+  projDims.clear();                              // CSS2DObject sam usuwa swoją etykietę z DOM
+  const fo = { group: projDims, cls: 'dim proj',
     mat: new THREE.LineBasicMaterial({ color: 0x1a56b0, depthTest: false, transparent: true }) };
   PANELS.forEach((p, i) => {
     const thin = p.size.indexOf(Math.min(...p.size));
     const max = p.pos.map((v, k) => v + p.size[k]);
     const t = 0.25 + 0.5 * ((i * 0.37) % 1);              // rozsunięcie etykiet, żeby się nie nakładały
-    const n0 = furnDims.children.length;
+    const n0 = projDims.children.length;
     for (let ax = 0; ax < 3; ax++) {
       if (ax === thin) continue;
       const a = [...max], b = [...max];
       a[ax] = p.pos[ax];
       dim(a, b, [0, 0, 0], { ...fo, t });
     }
-    for (let k = n0; k < furnDims.children.length; k++) furnDims.children[k].userData.panel = i;
+    for (let k = n0; k < projDims.children.length; k++) projDims.children[k].userData.panel = i;
   });
+}
+// wymiary mebli pokoju [cm]: gabaryty każdego mebla + odległość od ściany z oknem i od bliższej ściany bocznej
+const mebleDims = new THREE.Group();
+scene.add(mebleDims);
+function buildMebleDims() {
+  mebleDims.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+  mebleDims.clear();
+  const fo = { group: mebleDims, cls: 'dim meble', mat: new THREE.LineBasicMaterial({ color: 0x2e7d32, depthTest: false, transparent: true }) };
+  const W = roomW();
+  for (const f of ROOM.furniture || []) {
+    const lo = [0, 1, 2].map(k => Math.min(...f.parts.map(q => q.pos[k])));
+    const hi = [0, 1, 2].map(k => Math.max(...f.parts.map(q => q.pos[k] + q.size[k])));
+    const [x0, y0, z0] = lo, [x1, y1, z1] = hi, left = x0 <= W - x1;
+    const sx = left ? x1 : x0;                                          // bok mebla dalej od bliższej ściany
+    dim([x0, y1, z1], [x1, y1, z1], [0, 4, 0], fo);                     // szerokość
+    dim([sx, y1, z0], [sx, y1, z1], [0, 4, 0], fo);                     // głębokość
+    dim([sx, y0, z1], [sx, y1, z1], [0, 0, 4], fo);                     // wysokość
+    if (z0 > 0.5) dim([(x0 + x1) / 2, 0, 0], [(x0 + x1) / 2, 0, z0], [0, 1, 0], fo);           // od ściany z oknem
+    const wx = left ? 0 : W, nx = left ? x0 : x1;
+    if (Math.abs(nx - wx) > 0.5) dim([wx, 0, (z0 + z1) / 2], [nx, 0, (z0 + z1) / 2], [0, 1, 0], fo);   // od ściany bocznej
+  }
+  applyDims();
 }
 const setVis = (g, on) => g.traverse(o => { o.visible = on; });
 const dimsToggle = document.getElementById('dimsToggle');
-const furnToggle = document.getElementById('furnToggle');
+const projToggle = document.getElementById('projToggle');
+const mebleToggle = document.getElementById('mebleToggle');
 let hovered = null;                             // indeks elementu wskazanego na liście
 const applyDims = () => {
-  setVis(dims, dimsToggle.checked); setVis(furnDims, furnToggle.checked);
-  if (furnToggle.checked && hovered !== null)   // przy wskazanym elemencie tylko jego wymiary
-    for (const c of furnDims.children) c.visible = c.userData.panel === hovered;
-  if (furnToggle.checked)                       // bez wymiarów elementów jeszcze niezłożonych (suwak składania)
-    for (const c of furnDims.children) if (!panelShown(c.userData.panel)) c.visible = false;
+  setVis(dims, dimsToggle.checked); setVis(projDims, projToggle.checked);
+  setVis(mebleDims, mebleToggle.checked && furn.visible);         // bez wymiarów, gdy meble są ukryte
+  if (projToggle.checked && hovered !== null)   // przy wskazanym elemencie tylko jego wymiary
+    for (const c of projDims.children) c.visible = c.userData.panel === hovered;
+  if (projToggle.checked)                       // bez wymiarów elementów jeszcze niezłożonych (suwak składania)
+    for (const c of projDims.children) if (!panelShown(c.userData.panel)) c.visible = false;
 };
 // podświetlenie elementu wskazanego na liście (widoczne także przez inne płyty)
 const hlMat = new THREE.MeshBasicMaterial({ color: 0xff8a00, transparent: true, opacity: 0.8, depthTest: false, side: THREE.DoubleSide });
@@ -1108,7 +1186,7 @@ function setHovered(i) {
     updateViewOffset();
   };
 }
-dimsToggle.onchange = furnToggle.onchange = applyDims; applyDims();
+dimsToggle.onchange = projToggle.onchange = mebleToggle.onchange = applyDims; applyDims();
 
 addEventListener('resize', () => {
   labelRenderer.setSize(innerWidth, innerHeight);
@@ -1126,9 +1204,10 @@ addEventListener('resize', () => {
 const ghostMats = {
   room:   new THREE.MeshBasicMaterial({ color: 0x7d8fa3, transparent: true, opacity: 0.10, depthWrite: false, side: THREE.DoubleSide }),
   panels: new THREE.MeshBasicMaterial({ color: 0x3a3a3a, transparent: true, opacity: 0.14, depthWrite: false, side: THREE.DoubleSide }),
+  furn:   new THREE.MeshBasicMaterial({ color: 0x8a7a66, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide }),
 };
 const ghostEdge = new THREE.LineBasicMaterial({ color: 0x55657a, transparent: true, opacity: 0.6 });
-const groups = { room, panels };
+const groups = { room, panels, furn };
 function setMode(name, mode) {
   const g = groups[name], ghost = mode === 'ghost';
   g.visible = mode !== 'off';
@@ -1138,7 +1217,7 @@ function setMode(name, mode) {
     if (!o.userData.orig) { o.userData.orig = o.material; o.userData.cast = o.castShadow; }
     o.material = ghost ? ghostMats[name] : o.userData.orig;
     o.castShadow = ghost ? false : o.userData.cast;
-    if (name === 'room') {                       // pokój dostaje krawędzie tylko w trybie szkieletu
+    if (name !== 'panels') {                     // pokój i meble dostają krawędzie tylko w trybie szkieletu
       if (ghost && !o.userData.edges) {
         o.userData.edges = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 25), ghostEdge);
         o.add(o.userData.edges);
@@ -1147,12 +1226,23 @@ function setMode(name, mode) {
     }
   }
 }
-document.querySelectorAll('#views .seg').forEach(seg => seg.querySelectorAll('button').forEach(b => {
-  b.onclick = () => {
-    seg.querySelectorAll('button').forEach(x => x.classList.toggle('act', x === b));
-    setMode(seg.dataset.g, b.dataset.m);
-  };
-}));
+// ostatnio wybrany tryb każdego wiersza (pokój / projekt / meble) – localStorage, klucz VIS_KEY
+const VIS_KEY = 'parapet.widocznosc';
+let visSaved = {};
+try { visSaved = JSON.parse(localStorage.getItem(VIS_KEY) || '{}') || {}; } catch { visSaved = {}; }
+document.querySelectorAll('#views .seg').forEach(seg => {
+  const want = seg.querySelector(`button[data-m="${visSaved[seg.dataset.g]}"]`);   // przywrócenie przed pierwszym rysowaniem
+  if (want) seg.querySelectorAll('button').forEach(x => x.classList.toggle('act', x === want));
+  seg.querySelectorAll('button').forEach(b => {
+    b.onclick = () => {
+      seg.querySelectorAll('button').forEach(x => x.classList.toggle('act', x === b));
+      setMode(seg.dataset.g, b.dataset.m);
+      applyDims();
+      visSaved[seg.dataset.g] = b.dataset.m;
+      try { localStorage.setItem(VIS_KEY, JSON.stringify(visSaved)); } catch { /* bez pamięci */ }
+    };
+  });
+});
 // ---------- suwak składania: elementy pojawiają się w kolejności kroków (pole "step") ----------
 // Tytuły kroków są brane z sekcji "## Kolejność składania" w notes (linie "N. **Tytuł.** ...").
 const stepRange = document.getElementById('stepRange');
@@ -1207,9 +1297,9 @@ document.getElementById('stepNext').onclick = () => { stepRange.value = Math.min
   function select(v) {
     setHovered(null);
     current = v; PANELS = v ? v.panels : DEFAULT_PANELS;
-    buildPanels(); buildCut(); buildFurnDims();
+    buildPanels(); buildCut(); buildProjDims();
     const act = document.querySelector('.seg[data-g="panels"] button.act');
-    setMode('panels', act ? act.dataset.m : 'on');                   // zachowaj tryb widoczności mebli
+    setMode('panels', act ? act.dataset.m : 'on');                   // zachowaj tryb widoczności projektu
     buildSteps();                                                    // suwak składania: na start całość
     if (v) store(SEL_KEY + '.' + ROOM.name, v.name);
     $('verList').innerHTML = inRoom.length
@@ -1221,7 +1311,7 @@ document.getElementById('stepNext').onclick = () => { stepRange.value = Math.min
     ROOM = r;
     store(ROOM_KEY, r.name);
     buildRoom();
-    setView('persp');                                                // inny pokój = inna szerokość: kamera od nowa
+    resetView();                                                // inny pokój = inna szerokość: kamera od nowa
     inRoom = showable.filter(v => v.room === r.name);
     $('roomList').innerHTML = ROOMS.map((x, i) => `<button data-i="${i}"${x === ROOM ? ' class="act"' : ''}>${esc(x.name)}</button>`).join('');
     const want = load(SEL_KEY + '.' + r.name) || (first ? load(SEL_KEY) : null);   // stary klucz: tylko przy pierwszym wczytaniu

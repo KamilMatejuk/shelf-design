@@ -61,8 +61,8 @@ measurements unless the owner gives new ones. Fields (cm):
 | `size` | yes | `[width x, height y]` of the room |
 | `depth` | yes | How deep into the room the floor, ceiling and side walls are drawn |
 | `wallT` | yes | Thickness of the window wall (drawn only) |
-| `window` | yes | `{x, w, h, recess, gap, split?}`: left edge, width and height of the opening; how far the frame is set back behind the wall face; gap between sill top and frame. `split` = list of mullion positions as fractions of `w` (`[0.43]` = two sashes; omit for one sash) |
-| `sill` | yes | `{top, t, out, over}`: height of the sill's top face, thickness, projection in front of the wall, overhang beyond the opening on each side |
+| `window` | yes | `{x, w, h, recess, gap, split?}`: left edge, width and height of the opening; how far the frame is set back behind the wall face; gap between sill top and frame. `split` = list of mullion positions as fractions of `w` (`[0.43]` = two sashes; omit for one sash). `hinges` = optional list with one entry per sash, `"left"`, `"right"` or `null` (fixed sash): the hinge side, the handle is drawn on the opposite edge. Without `hinges` a handle is drawn left of each mullion (or near the right edge of a single sash) |
+| `sill` | yes | `{top, t, out, over, apron?}`: height of the sill's top face, thickness, projection in front of the wall, overhang beyond the opening on each side. `apron: {h, t}` = trim strip on the wall right under the sill, along its whole length: height and thickness (how far it sticks out of the wall) |
 | `radiators` | no | List of `{x, y, z, w, h, d, ribs, collectors?, valve?}`: min corner and size of the ribs, number of ribs, heights of the horizontal headers, and `valve: {side: "left"/"right", w}` – only widens the radiator's dimension span; draw the valve itself in `pipes` |
 | `pipes` | no | List of `{name?, r, points, mat?}`. 2 points = straight cylinder, more = smooth curve through the points. `mat`: `pipe` (default), `metal`, `white`. Use for risers, branches, valves, knobs, brackets |
 | `dims` | no | Extra room dimensions in the drawing: `{a, b, off?}` points in cm (the room, sill and radiator dimensions are generated automatically) |
@@ -105,7 +105,7 @@ The `wersje` block is a JSON array; its order is the button order. One entry:
 }
 ```
 
-`name` must be non-empty and unique across all rooms. `room` must be the `name` of a room in the
+`name` must be non-empty and unique within its room; the same name may be used in different rooms (each room numbers its versions from `v1`). Versions are selected per room, and the last selection is remembered per room. `room` must be the `name` of a room in the
 `pokoje` block; a version with an unknown or missing `room` is skipped with a console error. Keep one panel per line. The text is inside a `<script>` tag, so write `<` as `\u003c`. A version is shown only
 if `panels` is a non-empty array and every panel has a string `name`, a 3-number `size` with all
 values > 0, and a 3-number `pos`; otherwise it is skipped with a console error.
@@ -118,6 +118,8 @@ values > 0, and a 3-number `pos`; otherwise it is skipped with a console error.
 | `size` | yes | `[x, y, z]` in cm. The smallest value is the thickness; the other two are the cut format |
 | `pos` | yes | `[x, y, z]` of the min corner in cm |
 | `mesh` | no | `true` = 1 mm perforated sheet metal instead of board. Use thickness `0.1` |
+| `hdf` | no | `true` = 3 mm HDF back panel (like IKEA backs) instead of 18 mm board. Use thickness `0.3`; not with `mesh`, `lid`, `door` or `notch`. Drawn in a lighter grey, listed in its own section of the `.md` export and priced per m² (`hdf`) instead of in the board sheets |
+| `tilt` | no | Leaning panel, thin in **z** (e.g. a sloped back): `pos` is its bottom rear corner, `size[1]` its true length along the slope, and the top edge is shifted `tilt` cm toward the room (negative = toward the wall). Not with `mesh`, `lid`, `door` or `notch`. The overlap script checks it as an upright box, so check it by eye |
 | `lid` | no | `true` = hinged flap. Must be horizontal (thin in y). Pivots about its rear top edge (min z, max y) and swings up toward the wall when **Klapy i drzwiczki otwarte** is ticked. Three hinges are drawn automatically |
 | `door` | no | Side door on a vertical panel thin in **x** (not with `lid`, `mesh` or `notch`). Value `"front-right"`, `"front-left"`, `"back-right"` or `"back-left"`: hinge edge (`front` = max z, `back` = min z) and the side it swings to (`right` = +x). Two hinges are drawn; swings 85° with **Klapy i drzwiczki otwarte** |
 | `note` | no | Short Polish remark. Shown as a ⚠ tooltip in the parts list and in the `.md` export |
@@ -126,7 +128,7 @@ values > 0, and a 3-number `pos`; otherwise it is skipped with a console error.
 
 Renderer limits to respect:
 
-- Furniture board is always `1.8` thick. Sheet metal is `0.1`.
+- Furniture board is always `1.8` thick. Sheet metal is `0.1`. HDF backs (`hdf`) are `0.3`.
 - A vertical `mesh` panel must be thin in **z** (facing the room) or in **x** (facing sideways).
   A horizontal `mesh` panel only renders correctly when it is also a `lid`.
 - Panels are boxes. Anything else (cut-outs for pipes, rounded corners) cannot be drawn – describe
@@ -152,7 +154,7 @@ export follow the array order.
 
 1. Copy the closest existing entry of the same room in the `wersje` block and append it as a new
    entry (or after the one it is based on); keep its `room`. Never change an existing version unless the owner asks for that.
-2. Set a new unique `name` (`v3-<short-slug>`) and `saved`, and edit `panels`.
+2. Set a `name` that is new in that room (the next `vN`, optionally `vN-<short-slug>`) and `saved`, and edit `panels`.
 3. Check every panel against its room (the obstacle table for `Sypialnia` above) and against the
    other panels. Panels may touch but must not overlap. This script reads the obstacles from the
    version's room – the sill, the radiators and every straight (2-point) pipe – and prints overlaps:
@@ -168,6 +170,9 @@ export follow the array order.
    sx = max(0, win['x'] - sill['over'])
    obstacles = {'parapet': ([sx, sill['top'] - sill['t'], -win['recess']],
                             [min(win['w'] + 2 * sill['over'], W - sx), sill['t'], win['recess'] + sill['out']])}
+   if 'apron' in sill:
+       ap, sl = sill['apron'], min(win['w'] + 2 * sill['over'], W - sx)
+       obstacles['listwa pod parapetem'] = ([sx, sill['top'] - sill['t'] - ap['h'], 0], [sl, ap['h'], ap['t']])
    for i, k in enumerate(r.get('radiators', [])):
        obstacles['kaloryfer %d' % (i + 1)] = ([k['x'], k['y'], k['z']], [k['w'], k['h'], k['d']])
    for i, p in enumerate(r.get('pipes', [])):   # tylko proste odcinki (2 punkty); łuki sprawdzić na oko
